@@ -1,0 +1,28 @@
+{% set lines = lookup('file', job_script).splitlines() %}
+{% if  lines[0].startswith("#!") %}
+{{ lines[0] }}
+{% else %}
+#!/bin/sh
+{% endif %}
+
+##SBATCH --mail-type=BEGIN,END,NONE,FAIL,REQUEUE
+#SBATCH -J {{ job_name }}
+
+{% if job_node_name is defined %}
+#SBATCH --nodelist={{ job_node_name }}
+{% else %}
+#SBATCH --nodes={{ job_nb_nodes }}
+{% endif %}
+#SBATCH --ntasks-per-node={{ job_ppn }}
+#SBATCH --time={{ job_walltime }}
+{% if job_gpus > 0 %}
+#SBATCH --gres=gpu:{{ job_gpus }}
+{% endif %}
+
+{% if job_email is defined and job_email != "" %}
+#SBATCH --mail-user={{ job_email }}
+{% endif %}
+
+{% for line in lines[1:] %}
+{{ line }}
+{% endfor%}

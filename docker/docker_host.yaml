@@ -11,6 +11,9 @@ node_types:
       public_address:
         description: Host's IP
         type: string
+      username:
+        description: Host's username
+        type: string
     capabilities:
       host:
         type: tosca.capabilities.Node
@@ -21,10 +24,13 @@ node_types:
         operations:
           create:
             inputs:
-              host_public_address:      { default: { get_attribute: [ SELF, host, public_address ] } }
+              host_public_address:      { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
+              ansible_user:             { type: string, default: { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/create_docker_host.yml
           delete:
+            inputs:
+              ansible_user:             { type: string, default: { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/delete_docker_host.yml 
        

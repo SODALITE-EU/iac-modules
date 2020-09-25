@@ -18,6 +18,7 @@
       set_stats:
         data:
           public_address: "{{ host_public_address }}"
+          username: "{{ ansible_user }}"
     - name: Configure the docker mtu for OpenStack and restart docker host
       block:
         - lineinfile:

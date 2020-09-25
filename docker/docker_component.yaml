@@ -39,10 +39,15 @@ node_types:
         type: string
         required: False
       env:
-        description: Map for docker enviroment variables key-value dictionary
+        description: Map for docker environment variables key-value dictionary
         required: False
         type: map
         default: {}
+      env_file:
+        description: Path to file on remote with env vars
+        required: False
+        type: string    
+        default: ""            
       image_name:
         description: The name of the image on the host
         required: True
@@ -65,6 +70,30 @@ node_types:
         type: string
         required: False
         default:
+      ca_cert: 
+        description: Use a CA certificate when performing server verification by providing the path to a CA certificate file.
+        type: string 
+        required: False  
+        default: 
+      client_cert: 
+        description: Path to the client's TLS certificate file.
+        type: string 
+        required: False  
+        default:
+      client_key: 
+        description: Path to the client's TLS key file.
+        type: string 
+        required: False  
+        default:
+      etc_hosts:
+        description: Host-to-IP mappings 
+        required: False 
+        type: map 
+        default: {}
+    attributes:  
+      ip_address:
+        description: IP address of dockerized component
+        type: string            
     requirements:
       - network:
           capability: tosca.capabilities.Network
@@ -82,19 +111,24 @@ node_types:
         operations:
           create:
             inputs:
-              env:                  { type: string, default: { get_property: [ SELF, env ] } }
-              ports:                { type: string, default: { get_property: [ SELF, ports ] } }
-              restart_policy:       { type: string, default: { get_property: [ SELF, restart_policy ] } }
-              image_name:           { type: string, default: { get_property: [ SELF, image_name ] } }
-              alias:                { type: string, default: { get_property: [ SELF, alias ] } }
-              exposed_ports:        { type: string, default: { get_property: [ SELF, exposed_ports ] } }
-              registry_url:         { type: string, default: { get_property: [ SELF, registry, docker_registry_url ] } }
-              volumes:              { type: string, default: { get_property: [ SELF, volumes ] } }
-              command:              { type: string, default: { get_property: [ SELF, command ] } }
-              docker_network_name:  { type: string, default: { get_property: [ SELF, docker_network_name ] } }
-              sleep:                { type: string, default: { get_property: [ SELF, sleep ] } }
-              public_address:       { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
-              ansible_user:         { type: string, default: { get_attribute: [ SELF, host, username ] } } 
+              env:                  { type: map,     default: { get_property: [ SELF, env ] } }
+              env_file:             { type: string,  default: { get_property: [ SELF, env_file ] } } 
+              ports:                { type: list,    default: { get_property: [ SELF, ports ] } }
+              restart_policy:       { type: string,  default: { get_property: [ SELF, restart_policy ] } }
+              image_name:           { type: string,  default: { get_property: [ SELF, image_name ] } }
+              alias:                { type: string,  default: { get_property: [ SELF, alias ] } }
+              exposed_ports:        { type: string,  default: { get_property: [ SELF, exposed_ports ] } }
+              registry_url:         { type: string,  default: { get_property: [ SELF, registry, docker_registry_url ] } }
+              volumes:              { type: list,    default: { get_property: [ SELF, volumes ] } }
+              command:              { type: list,    default: { get_property: [ SELF, command ] } }
+              docker_network_name:  { type: string,  default: { get_property: [ SELF, docker_network_name ] } }
+              ca_cert:              { type: string,  default: { get_property: [ SELF, ca_cert ] } }
+              client_cert:          { type: string,  default: { get_property: [ SELF, client_cert ] } } 
+              client_key:           { type: string,  default: { get_property: [ SELF, client_key ] } } 
+              etc_hosts:            { type: map,     default: { get_property: [ SELF, etc_hosts ] } }
+              sleep:                { type: integer, default: { get_property: [ SELF, sleep ] } }
+              public_address:       { type: string,  default: { get_attribute: [ SELF, host, public_address ] } }
+              ansible_user:         { type: string,  default: { get_attribute: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/add_container.yml
           delete:

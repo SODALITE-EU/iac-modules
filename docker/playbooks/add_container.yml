@@ -25,10 +25,17 @@
         "{{ volumes }}"
       env:
         "{{ env }}"
+      env_file: 
+        "{{ env_file }}"  
       ports:
          "{{ ports }}"
       exposed_ports:
         "{{ exposed_ports }}"
+      ca_cert: "{{ ca_cert }}"
+      client_cert: "{{ client_cert }}"
+      client_key: "{{ client_key }}"
+      etc_hosts:
+        "{{ etc_hosts }}"
       networks:
         - name: "{{ docker_network_name }}"        
           aliases:
@@ -52,13 +59,31 @@
         "{{ volumes }}"
       env:
         "{{ env }}"
+      env_file: 
+        "{{ env_file }}"  
       ports:
          "{{ ports }}"
       exposed_ports:
         "{{ exposed_ports }}"
+      ca_cert: "{{ ca_cert }}"
+      client_cert: "{{ client_cert }}"
+      client_key: "{{ client_key }}"
+      etc_hosts:
+        "{{ etc_hosts }}"
+        
     notify:
       - "{{ alias }} sleep"
     when: docker_network_name == None     
+
+  - shell: "docker inspect --format '{''{ .NetworkSettings.IPAddress }''}' {{ alias }}"
+    register: result
+    when: docker_network_name != None
+
+  - name: Extract ip address
+    set_stats:
+      data:
+        ip_address: "{{ result.stdout }}"
+    when: docker_network_name != None            
 
   handlers:  
   - name: "{{ alias }} sleep"
@@ -67,4 +92,4 @@
     when: 
     - sleep > 0     
     
- 
+    

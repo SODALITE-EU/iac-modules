@@ -1,0 +1,19 @@
+- hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Create security group
+      ec2_group:  
+        name: "{{ group_name }}"
+        state: present
+        description: "{{ group_description }}"
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        rules: "{{ rules }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      register: group_info        
+    - name: Set attributes
+      set_stats:
+        data:
+          group_id: "{{ group_info.group_id }}"

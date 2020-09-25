@@ -1,0 +1,15 @@
+- hosts: all
+  gather_facts: no
+
+  tasks:
+    - name: Delete security group
+      ec2_group:  
+        group_id: "{{ group_id }}"
+        state: absent
+        region: "{{ region }}"
+        vpc_id: "{{ vpc_id }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+      ignore_errors: True
+
+

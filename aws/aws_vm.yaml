@@ -1,0 +1,85 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - aws_security_rule.yaml
+
+node_types:
+
+  sodalite.nodes.AWS.VM:  
+    derived_from: tosca.nodes.Compute 
+    properties:  
+      network:  
+        description: AWS subnet ID in which to launch the instance (VPC) 
+        type: string 
+      name:  
+        description: Name that should be given to the VM in OpenStack 
+        type: string 
+      security_groups:  
+        description: AWS names of the security groups to which the instance should be added.
+        type: list 
+      flavor:  
+        description: AWS flavor 
+        type: string 
+      image:  
+        description: AWS image 
+        type: string 
+      key_name:  
+        description: AWS SSH key name that should be placed on the VM 
+        type: string 
+      username:  
+        description: Username for SSH connection 
+        type: string  
+      region:
+        description: The AWS region to use.
+        required: False 
+        type: string     
+      aws_access_key:
+        description: The AWS access key.
+        required: False 
+        type: string   
+      aws_secret_key:
+        description: The AWS secret key.
+        required: False 
+        type: string           
+    attributes:  
+      id:  
+        description: OpenStack id of the VM 
+        type: string 
+      ansible_ip:  
+        description: ansible ipv4 
+        type: string 
+    requirements:  
+      - protected_by:  
+          relationship: tosca.relationships.DependsOn 
+          node: sodalite.nodes.AWS.SecurityRules 
+          capability: tosca.capabilities.Node 
+          occurrences: [0, UNBOUNDED]
+    capabilities:  
+      feature:  
+        type: tosca.capabilities.Node 
+    interfaces:  
+      Standard:  
+        type: tosca.interfaces.node.lifecycle.Standard 
+        operations:
+          create:  
+            inputs:  
+              network:                  { type: string, default: { get_property: [ SELF, network  ] } } 
+              flavor:                   { type: string, default: { get_property: [ SELF, flavor   ] } } 
+              key_name:                 { type: string, default: { get_property: [ SELF, key_name ] } } 
+              image:                    { type: string, default: { get_property: [ SELF, image    ] } } 
+              security_groups:          { type: string, default: { get_property: [ SELF, security_groups ] } } 
+              vm_name:                  { type: string, default: { get_property: [ SELF, name ] } } 
+              region:                   { type: string, default: { get_property: [ SELF, region  ] } } 
+              aws_access_key:           { type: string, default: { get_property: [ SELF, aws_access_key  ] } } 
+              aws_secret_key:           { type: string, default: { get_property: [ SELF, aws_secret_key  ] } } 
+              ansible_user:             { type: string, default: { get_property: [ SELF, username ] } } 
+            implementation: 
+              primary: playbooks/vm_create.yml 
+          delete:  
+            inputs:  
+              id:                       { type: string, default: { get_attribute: [ SELF, id ] } } 
+              region:                   { type: string, default: { get_property: [ SELF, region  ] } } 
+              aws_access_key:           { type: string, default: { get_property: [ SELF, aws_access_key  ] } } 
+              aws_secret_key:           { type: string, default: { get_property: [ SELF, aws_secret_key  ] } } 
+            implementation: 
+              primary: playbooks/vm_delete.yml 

@@ -1,0 +1,44 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Create VM
+      ec2:   
+        id: "{{ vm_name }}"     
+        key_name: "{{ key_name }}"
+        instance_type:  "{{ flavor }}"
+        image: "{{ image }}"
+        wait: yes
+        group: "{{ security_groups }}"
+        vpc_subnet_id: "{{ network }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        assign_public_ip: yes
+      register: server_info
+
+    - name: Set attributes
+      set_stats:
+        data:
+          private_address: "{{ item.private_ip }}"
+          public_address: "{{ item.public_ip }}"
+          id: "{{ item.id }}"
+      with_items: "{{ server_info.instances }}"  
+
+    - name: Create temporary inventory for ssh wait
+      add_host:
+        name: server
+        groups: vms
+        ansible_host: "{{ item.public_ip }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_common_args: >
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+      with_items: "{{ server_info.instances }}"    
+
+
+- hosts: vms
+  gather_facts: no
+  tasks:
+    - name: Wait for ssh to wake up
+      wait_for_connection:
+

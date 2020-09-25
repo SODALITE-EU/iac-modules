@@ -29,11 +29,11 @@ node_types:
         operations:
           create:
             inputs:
-              registry_ip:              { default: { get_property: [ SELF, registry_ip ] } }
-              country_name:             { default: { get_property: [ SELF, country_name ] } }
-              organization_name:        { default: { get_property: [ SELF, organization_name ] } }
-              email_address:            { default: { get_property: [ SELF, email_address ] } } 
-              public_ipv4_address:      { default: { get_attribute: [ SELF, host, public_address ] } }                                                
+              registry_ip:              { type: string, default: { get_property: [ SELF, registry_ip ] } }
+              country_name:             { type: string, default: { get_property: [ SELF, country_name ] } }
+              organization_name:        { type: string, default: { get_property: [ SELF, organization_name ] } }
+              email_address:            { type: string, default: { get_property: [ SELF, email_address ] } } 
+              public_ipv4_address:      { type: string, default: { get_attribute: [ SELF, host, public_address ] } }                                                
             implementation:
               primary: playbooks/add_cert.yml 
               dependencies: 
@@ -41,6 +41,6 @@ node_types:
                 - artifacts/ca.key               
           delete:
             inputs:
-              registry_ip:              { default: { get_property: [ SELF, registry_ip ] } }
+              registry_ip:              { type: string, default: { get_property: [ SELF, registry_ip ] } }
             implementation:
               primary: playbooks/remove_cert.yml 

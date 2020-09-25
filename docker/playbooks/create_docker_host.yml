@@ -6,7 +6,7 @@
   vars:
     pip_install_packages:
       - name: docker
-    docker_package: "docker-ce-19.03.5-3.el7"
+    #docker_package: "docker-ce-19.03.5-3.el7"
 
   pre_tasks:
     - name: update cache

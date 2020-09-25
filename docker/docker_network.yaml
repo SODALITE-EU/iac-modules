@@ -18,11 +18,13 @@ node_types:
         operations:
           create:
             inputs:
-              docker_network_name:    { default: { get_property: [ SELF, name ] } }
+              docker_network_name:    { type: string, default: { get_property: [ SELF, name ] } }
+              ansible_user:         { type: string, default:  { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/add_network.yml 
           delete:
             inputs:
-              docker_network_name:    { default: { get_property: [ SELF, name ] } }
+              docker_network_name:    { type: string, default: { get_property: [ SELF, name ] } }
+              ansible_user:         { type: string, default:  { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/remove_network.yml 

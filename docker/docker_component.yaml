@@ -82,23 +82,25 @@ node_types:
         operations:
           create:
             inputs:
-              env:                  { default: { get_property: [ SELF, env ] } }
-              ports:                { default: { get_property: [ SELF, ports ] } }
-              restart_policy:       { default: { get_property: [ SELF, restart_policy ] } }
-              image_name:           { default: { get_property: [ SELF, image_name ] } }
-              alias:                { default: { get_property: [ SELF, alias ] } }
-              exposed_ports:        { default: { get_property: [ SELF, exposed_ports ] } }
-              registry_url:         { default: { get_property: [ SELF, registry, docker_registry_url ] } }
-              volumes:              { default: { get_property: [ SELF, volumes ] } }
-              command:              { default: { get_property: [ SELF, command ] } }
-              docker_network_name:  { default: { get_property: [ SELF, docker_network_name ] } }
-              sleep:                { default: { get_property: [ SELF, sleep ] } }
-              public_address:       { default: { get_attribute: [ SELF, host, public_address ] } }
+              env:                  { type: string, default: { get_property: [ SELF, env ] } }
+              ports:                { type: string, default: { get_property: [ SELF, ports ] } }
+              restart_policy:       { type: string, default: { get_property: [ SELF, restart_policy ] } }
+              image_name:           { type: string, default: { get_property: [ SELF, image_name ] } }
+              alias:                { type: string, default: { get_property: [ SELF, alias ] } }
+              exposed_ports:        { type: string, default: { get_property: [ SELF, exposed_ports ] } }
+              registry_url:         { type: string, default: { get_property: [ SELF, registry, docker_registry_url ] } }
+              volumes:              { type: string, default: { get_property: [ SELF, volumes ] } }
+              command:              { type: string, default: { get_property: [ SELF, command ] } }
+              docker_network_name:  { type: string, default: { get_property: [ SELF, docker_network_name ] } }
+              sleep:                { type: string, default: { get_property: [ SELF, sleep ] } }
+              public_address:       { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
+              ansible_user:         { type: string, default: { get_attribute: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/add_container.yml
           delete:
             inputs:
-              alias:                { default: { get_property: [ SELF, alias ] } }
+              alias:                { type: string, default: { get_property: [ SELF, alias ] } }
+              ansible_user:         { type: string, default: { get_attribute: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/remove_container.yml
 
@@ -111,7 +113,7 @@ node_types:
         required: false
       test_port:
         type: integer
-        description: Port for testing avalability of the container
+        description: Port for testing availability of the container
         required: false
     interfaces:
       Standard:
@@ -119,9 +121,9 @@ node_types:
         operations:
           create:
             inputs:
-              component_name:     { default: { get_attribute: [ SELF, tested_component, tosca_name ] } }
-              test_delay:         { default: { get_property: [ SELF, test_delay ] } }
-              test_port:          { default: { get_property: [ SELF, test_port ] } }
+              component_name:     { type: string, default: { get_attribute: [ SELF, tested_component, tosca_name ] } }
+              test_delay:         { type: string, default: { get_property: [ SELF, test_delay ] } }
+              test_port:          { type: string, default: { get_property: [ SELF, test_port ] } }
             implementation:
               primary: playbooks/test_container.yml
     requirements:

@@ -15,11 +15,13 @@ node_types:
         operations:
           create:
             inputs:
-              volume_name:    { default: { get_property: [ SELF, name ] } }
+              volume_name:          { type: string, default: { get_property: [ SELF, name ] } }
+              ansible_user:         { type: string, default: { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/add_volume.yml 
           delete:
             inputs:
-              volume_name:    { default: { get_property: [ SELF, name ] } }
+              volume_name:          { type: string, default: { get_property: [ SELF, name ] } }
+              ansible_user:         { type: string, default: { get_property: [ SELF, host, username ] } } 
             implementation:
               primary: playbooks/remove_volume.yml   

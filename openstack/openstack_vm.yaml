@@ -42,8 +42,8 @@ node_types:
         required: false 
       floating_ip_pools:
         description: Name of floating IP pool from which to choose a floating IP
-        type: string
-        default: "provider"
+        type: list
+        default: 
         required: false 
       userdata:
         description: Additional userdata applied to configure the VM
@@ -88,7 +88,7 @@ node_types:
               ansible_user:             { type: string,  default: { get_property: [ SELF, username ] } } 
               include_exporter:         { type: boolean, default: { get_property: [ SELF, include_exporter ] } } 
               timeout:                  { type: integer, default: { get_property: [ SELF, timeout ] } } 
-              floating_ip_pools:        { type: string,  default: { get_property: [ SELF, floating_ip_pools ] } } 
+              floating_ip_pools:        { type: list,  default: { get_property: [ SELF, floating_ip_pools ] } } 
               userdata:                 { type: string,  default: { get_property: [ SELF, userdata ] } } 
               env:                      { type: map,     default: { get_property: [ SELF, env ] } } 
             implementation: 

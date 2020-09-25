@@ -67,16 +67,16 @@ node_types:
               dependencies:
                 - playbooks/egi_refresh_token.yml
             inputs:  
-              ports:                  { default: { get_property: [ SELF, ports  ] } } 
-              group_name:             { default: { get_property: [ SELF, group_name         ] } } 
-              group_description:      { default: { get_property: [ SELF, group_description  ] } } 
-              env:                    { default: { get_property: [ SELF, env ] } }
+              ports:                  { type: map,    default: { get_property: [ SELF, ports  ] } } 
+              group_name:             { type: string, default: { get_property: [ SELF, group_name         ] } } 
+              group_description:      { type: string, default: { get_property: [ SELF, group_description  ] } } 
+              env:                    { type: map,    default: { get_property: [ SELF, env ] } }
           delete:  
             implementation: 
               primary: playbooks/security_rule_delete.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
             inputs:  
-              group_name:             { default: { get_property: [ SELF, group_name         ] } }
-              env:                    { default: { get_property: [ SELF, env ] } }             
+              group_name:             { type: string, default: { get_property: [ SELF, group_name         ] } }
+              env:                    { type: map,    default: { get_property: [ SELF, env ] } }             
       

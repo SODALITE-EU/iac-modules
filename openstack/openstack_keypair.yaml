@@ -33,15 +33,15 @@ node_types:
               dependencies: 
                 - playbooks/egi_refresh_token.yml
             inputs:  
-              name:             { default: { get_property: [ SELF, name       ] } } 
-              public_key:       { default: { get_property: [ SELF, public_key ] } } 
-              env:              { default: { get_property: [ SELF, env        ] } }
+              name:             { type: string, default: { get_property: [ SELF, name       ] } } 
+              public_key:       { type: string, default: { get_property: [ SELF, public_key ] } } 
+              env:              { type: map,    default: { get_property: [ SELF, env        ] } }
           delete:  
             implementation: 
               primary: playbooks/keypair_delete.yml 
               dependencies: 
                 - playbooks/egi_refresh_token.yml
             inputs:  
-              name:             { default: { get_property: [ SELF, name   ] } }
-              env:              { default: { get_property: [ SELF, env    ] } }             
+              name:             { type: string, default: { get_property: [ SELF, name   ] } }
+              env:              { type: map,    default: { get_property: [ SELF, env    ] } }             
       

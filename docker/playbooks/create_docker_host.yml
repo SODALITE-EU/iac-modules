@@ -6,12 +6,16 @@
   vars:
     pip_install_packages:
       - name: docker
-    #docker_package: "docker-ce-19.03.5-3.el7"
-
+    
   pre_tasks:
     - name: update cache
       package:
         update_cache: yes
+    - name: Set vars for Cent OS backward compatibility
+      set_fact:
+        docker_package: "docker-ce-19.03.5-3.el7"
+        pip_package: python-pip
+      when: ansible_distribution == "CentOS"         
 
   tasks:
     - name: Set attributes

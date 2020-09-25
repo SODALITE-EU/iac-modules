@@ -1,0 +1,77 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+data_types:
+
+  sodalite.datatypes.OpenStack.env:  
+    derived_from: tosca.datatypes.Root
+    properties:
+      checkin_env:
+        type: map
+        required: false
+        default: null
+        entry_schema:
+          type: sodalite.datatypes.OpenStack.env.Token.EGI
+      os_env:
+        type: map
+        required: false
+        default: null
+        entry_schema:
+          type: sodalite.datatypes.OpenStack.env.OS
+
+  sodalite.datatypes.OpenStack.env.Token.EGI:  
+    derived_from: tosca.datatypes.Root
+    properties:  
+      CHECKIN_CLIENT_ID:  
+        type: string 
+      CHECKIN_CLIENT_SECRET:  
+        type: string 
+      CHECKIN_REFRESH_TOKEN:  
+        type: string 
+      EGI_SITE:  
+        type: string
+
+  sodalite.datatypes.OpenStack.env.OS:  
+    derived_from: tosca.datatypes.Root
+    properties:  
+      OS_AUTH_URL:  
+        type: string 
+        default:
+      OS_AUTH_TYPE:  
+        type: string 
+        default:
+      OS_IDENTITY_PROVIDER:  
+        type: string 
+        default:
+      OS_PROTOCOL:  
+        type: string
+        default:
+      OS_ACCESS_TOKEN:  
+        type: string
+        default:
+      OS_PROJECT_ID:  
+        type: string
+        default:
+      OS_PROJECT_NAME:  
+        type: string 
+        default:
+      OS_PROJECT_DOMAIN_ID: 
+        type: string 
+        default:   
+      OS_USER_DOMAIN_NAME:  
+        type: string 
+        default:
+      OS_REGION_NAME:  
+        type: string 
+        default:
+      OS_USERNAME:  
+        type: string
+        default:
+      OS_PASSWORD:  
+        type: string
+        default:
+      OS_INTERFACE: 
+        type: string
+        default:
+      OS_IDENTITY_API_VERSION: 
+        type: string
+        default:          

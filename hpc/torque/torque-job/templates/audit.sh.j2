@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# argv[1]       job id
+# argv[2]       job execution user name
+# argv[3]       job execution group name
+# argv[4]       job name
+# argv[5]       session id
+# argv[6]       list of requested resource limits
+# argv[7]       list of resources used by job
+# argv[8]       job execution queue
+# argv[9]       job account
+# argv[10]      job exit code
+# argv[11]      job script location
+
+echo "
+Job_Id: $1
+euser: $2
+egroup: $3
+Job_Name: $4
+session_id: $5
+Resource_List: $6
+resources_used: $7
+queue: $8
+exit_status: ${10}
+script_location: ${11}
+" > {{ job_workspace_path }}/$4.$1.stat
+
+
+# $ cat job.stat 
+
+# Job_Id = 615.cloudserver
+# euser = kamil
+# egroup = kamil
+# Job_Name = demo-cmd.pbs
+# session_id = 11502
+# Resource_List = nodes=1:ppn=20,walltime=00:01:00,epilogue=epilogue.sh,neednodes=1:ppn=20
+# resources_used = cput=00:00:00,vmem=0kb,walltime=00:00:02,mem=0kb,energy_used=0
+# queue = batch
+# account = 
+# exit_status = 0
+# script_location = /var/spool/torque/mom_priv/jobs/615.cloudserver.SC

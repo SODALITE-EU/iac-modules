@@ -1,0 +1,21 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Read the file
+        shell: cat {{ file_location }}
+        register: file_contents
+
+      - name: Evaluate the expression
+        set_stats:
+          data:
+            checked_against: "{{ file_contents.stdout }}"
+            status: "{{ (not regex and file_contents.stdout == comparable_string) or (regex and file_contents.stdout is regex(comparable_string)) }}"
+      rescue:
+        - name: If the request fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

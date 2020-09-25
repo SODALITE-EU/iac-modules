@@ -1,0 +1,51 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: "Create optimization.ai_training.config.type variable"
+      set_fact:
+        optimisation_updated_params: "{{ optimisation | combine( { 'app_type-ai_training': { 'config': { 'type' : ai_config_type } } } , recursive=True) }}"
+      vars:
+        ai_config_type: "{{ optimisation['app_type-ai_training']['config']['config_type'] }}"
+      when: optimisation['app_type-ai_training']['config']['config_type'] is defined
+
+    - name: Create request data
+      set_fact:
+        request:
+          job:
+            job_options: "{{ job_options }}"
+            application: "{{ application }}"
+            target: "{{ target }}"
+            optimisation: "{{ optimisation_updated_params if optimisation_updated_params is defined else optimisation }}"
+
+    # just for debugging purposes
+    - copy: content="{{ request | to_nice_json }}" dest=/tmp/ansible-request-{{ request['job']['application']['app_tag'] }}.json
+
+    - name: Send request to MODAK
+      uri:
+        url: "{{ modak_endpoint }}"
+        method: POST
+        body_format: json
+        body: "{{ request }}"
+      register: response
+
+    # just for debugging purposes
+    - copy: content="{{ response.json | to_nice_json }}" dest=/tmp/ansible-response-{{ request['job']['application']['app_tag'] }}.json
+
+    - set_fact:
+        artifact_url: "{{ response.json.job.job_script }}"
+
+    - set_fact:
+        container_runtime: "{{ response.json.job.application.container_runtime if response.json.job.application.container_runtime is defined else '' }}"
+
+    - name: Set artifact url
+      set_stats:
+        data:
+          artifact_url: "{{ artifact_url }}"
+          container_runtime: "{{ container_runtime }}"
+
+    - name: Save job
+      get_url:
+        url: "{{ artifact_url }}"
+        dest: "{{ job_script }}"

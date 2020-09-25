@@ -1,0 +1,58 @@
+---
+- name: Refresh token and update env
+  import_playbook: egi_refresh_token.yml
+  when: env.checkin_env is defined
+
+- hosts: all
+  gather_facts: no
+  vars:
+    exporter_meta:
+      prometheus_io_scrape: "true"
+      prometheus_io_port: "9100"
+  tasks:
+    - set_fact:
+        os_env: "{{ env.os_env }}"
+      when: env.os_env is defined  
+
+    - name: Create VM
+      os_server:
+        state: present
+        name: "{{ vm_name }}"
+        image: "{{ image }}"
+        key_name: "{{ key_name }}"
+        flavor: "{{ flavor }}"
+        network: "{{ network }}"
+        security_groups: "{{ security_groups }}"
+        timeout: "{{ timeout }}"
+        floating_ip_pools: "{{ floating_ip_pools }}"
+        meta: "{{ exporter_meta if (include_exporter is defined and include_exporter == True) else {} }}"
+        userdata: "{{ userdata }}"
+      register: server_info
+      environment: "{{ os_env if os_env is defined }}"
+
+    - name: Set attributes
+      set_stats:
+        data:
+          private_address: "{{ server_info.server.private_v4 }}"
+          public_address: "{{ server_info.server.public_v4 }}"
+          id: "{{ server_info.server.id }}"
+
+    - name: Create temporary invetory for ssh wait
+      add_host:
+        name: server
+        groups: vms
+        ansible_host: "{{ server_info.server.public_v4 }}"
+        ansible_user: "{{ ansible_user }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+
+
+- hosts: vms
+  gather_facts: no
+  tasks:
+    - name: Wait for ssh to wake up
+      wait_for_connection:
+      environment: "{{ os_env if os_env is defined }}"

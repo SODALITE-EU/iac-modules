@@ -1,0 +1,5 @@
+{% if job_enable_audit %}
+#PBS -l epilogue={{ job_workspace_path }}/audit.sh
+{% endif %}
+
+{{ lookup('file', job_script) }}

@@ -1,0 +1,49 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Execute command (linux)
+        shell:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+          cmd:          "{{ command }}"
+        register: command_output
+        when: host_os == 'linux'
+
+      - name: Execute command (windows)
+        win_shell: "{{ command }}"
+        args:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+        register: co
+        when: host_os == 'windows'
+
+      - set_fact:
+          command_output: "{{co}}"
+        when: command_output is undefined
+
+      - name: Convert time to decimal seconds
+        set_fact:
+          calculated_time: "{{  ((command_output.delta + '').split(':')[0]|int)*60*60
+                            +   ((command_output.delta + '').split(':')[1]|int)*60
+                            +   ((command_output.delta + '').split(':')[2]|float) }}"
+          number_time: "{{ time|float }}"
+
+      - name: Evaluate the expression
+        set_stats:
+          data:
+            checked_against: "{{ calculated_time }}"
+            status: "{{  (comparator == 'eq' and calculated_time == number_time)
+                     or  (comparator == 'lt' and calculated_time < number_time)
+                     or  (comparator == 'le' and calculated_time <= number_time)
+                     or  (comparator == 'gt' and calculated_time > number_time)
+                     or  (comparator == 'ge' and calculated_time >= number_time)  }}"
+      rescue:
+        - name: If the command execution fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

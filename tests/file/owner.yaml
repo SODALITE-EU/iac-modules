@@ -1,0 +1,45 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Check the file's stats
+        stat:
+          path: "{{ file_location }}"
+          follow: "{{ follow }}"
+        register: file_stats
+
+      - name: Evaluate the expression in case of user name check
+        set_stats:
+          data:
+            checked_against: "{{ file_stats.stat.pw_name }}"
+            status: "{{ file_stats.stat.pw_name == owner }}"
+        when: "{{ not check_group and not check_id }}"
+
+      - name: Evaluate the expression in case of user ID check
+        set_stats:
+          data:
+            checked_against: "{{ file_stats.stat.uid }}"
+            status: "{{ file_stats.stat.uid == owner }}"
+        when: "{{ not check_group and check_id }}"
+
+      - name: Evaluate the expression in case of group name check
+        set_stats:
+          data:
+            checked_against: "{{ file_stats.stat.gr_name }}"
+            status: "{{ file_stats.stat.gr_name == owner }}"
+        when: "{{ check_group and not check_id }}"
+
+      - name: Evaluate the expression in case of group ID check
+        set_stats:
+          data:
+            checked_against: "{{ file_stats.stat.gid }}"
+            status: "{{ file_stats.stat.gid == owner }}"
+        when: "{{ check_group and check_id }}"
+      rescue:
+        - name: If the request fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

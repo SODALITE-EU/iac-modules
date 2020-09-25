@@ -1,0 +1,67 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+
+  sodalite.image_puller.singularity:
+    derived_from: tosca.nodes.Root
+    properties:
+      output:
+        type: "string"
+        required: false
+        default: ""
+        description: "Output name of SIF file. Must be specified when registry is private"
+      image:
+        type: "string"
+      registry:
+        type: "string"
+        constraints:
+          - valid_values: [ "library", "docker", "shub", "private" ]
+      images_location:
+        type: string
+        default: "images"
+      certs_location:
+        type: string
+        required: false
+        default: "certs"
+      puller_image:
+        type: string
+        default: "puller.sif"
+      puller_image_remote:
+        type: string
+        default: "modakopt/modak:puller"
+    requirements:
+      - host:
+          node: tosca.nodes.Compute
+          capability: tosca.capabilities.Compute
+          relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          configure:
+            inputs:
+              remote_host_public_address: { default: { get_attribute: [SELF, host, public_address] } }
+              remote_host_username: { default: { get_attribute: [SELF, host, username] } }
+              remote_host_keypath: { default: { get_attribute: [SELF, host, ssh-key] } }
+              output: { default: { get_property: [SELF, output] } }
+              registry: { default: { get_property: [SELF, registry] } }
+              certs_location: { default: { get_property: [SELF, certs_location] } }
+              images_location: { default: { get_property: [SELF, images_location] } }
+              puller_image: { default: { get_property: [SELF, puller_image] } }
+              puller_image_remote: { default: { get_property: [SELF, puller_image_remote] } }
+            implementation: 
+              primary: playbooks/configure-puller.yml
+          start:
+            inputs:
+              remote_host_public_address: { default: { get_attribute: [SELF, host, public_address] } }
+              remote_host_username: { default: { get_attribute: [SELF, host, username] } }
+              remote_host_keypath: { default: { get_attribute: [SELF, host, ssh-key] } }
+              image: { default: { get_property: [SELF, image] } }
+              output: { default: { get_property: [SELF, output] } }
+              registry: { default: { get_property: [SELF, registry] } }
+              certs_location: { default: { get_property: [SELF, certs_location] } }
+              images_location: { default: { get_property: [SELF, images_location] } }
+              puller_image: { default: { get_property: [SELF, puller_image] } }
+            implementation: 
+              primary: playbooks/start-puller.yml
+          

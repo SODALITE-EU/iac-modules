@@ -1,0 +1,23 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Check that the somefile.conf exists
+        stat:
+          path: "{{ file_location }}"
+          follow: "{{ follow }}"
+        register: file_stats
+
+      - name: Evaluate the expression
+        set_stats:
+          data:
+            checked_against: "{{ file_stats.stat.exists }}"
+            status: "{{ file_stats.stat.exists == exists }}"
+      rescue:
+        - name: If the request fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

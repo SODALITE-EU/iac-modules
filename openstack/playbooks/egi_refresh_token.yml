@@ -1,0 +1,177 @@
+---
+- hosts: all
+  gather_facts: no
+  
+  vars:
+# Some Global Vars
+    CHECKIN_CLIENT_ID: "{{ env.checkin_env.CHECKIN_CLIENT_ID }}"
+    CHECKIN_CLIENT_SECRET: "{{ env.checkin_env.CHECKIN_CLIENT_SECRET }}"
+    CHECKIN_REFRESH_TOKEN: "{{ env.checkin_env.CHECKIN_REFRESH_TOKEN }}"
+    EGI_SITE: "{{ env.checkin_env.EGI_SITE }}"
+    CHECKIN_OIDC_URL: https://aai.egi.eu/oidc
+    GOCDB_PUBLICURL: https://goc.egi.eu/gocdbpi/public/
+    # TODO: protocal can be also "oidc", make fallback to it
+    PROTOCOL: openid
+    auth_path: "{{ '/v3/OS-FEDERATION/identity_providers/egi.eu/protocols/' + PROTOCOL + '/auth' }}"
+    project_path: /v3/auth/projects
+    token_path: /v3/auth/tokens
+  
+  tasks:
+
+# Getting access token from CHECKIN
+    - name: Discover OIDC
+      uri:
+        url: "{{ CHECKIN_OIDC_URL }}/.well-known/openid-configuration"
+        method: GET
+      register: oidc_discovery
+
+    - set_fact:
+        OIDC_ENDPOINT: "{{ oidc_discovery.json.token_endpoint }}"
+
+    - debug:
+        msg: "{{ OIDC_ENDPOINT }}"
+
+    - set_fact:
+        refresh_token_request:
+          client_id: "{{ CHECKIN_CLIENT_ID }}"
+          client_secret: "{{ CHECKIN_CLIENT_SECRET }}"
+          grant_type: "refresh_token"
+          refresh_token: "{{ CHECKIN_REFRESH_TOKEN }}"
+          scope: "openid email profile"
+
+    - name: Refresh token
+      uri:
+        url: "{{ OIDC_ENDPOINT }}"
+        method: POST
+        body_format: form-urlencoded
+        body: "{{ refresh_token_request }}"
+      register: refresh_token
+
+    - set_fact:
+        access_token: "{{ refresh_token.json.access_token }}"
+
+    - debug:
+        msg: "{{ access_token }}"
+
+# Getting Site Information
+    - set_fact:
+        site_info_request:
+          method: "get_service_endpoint"
+          service_type: org.openstack.nova
+          monitored: "Y"
+          sitename: "{{ EGI_SITE }}"
+
+    - name: Get site
+      uri:
+        url: "{{ GOCDB_PUBLICURL }}?{{ site_info_request | urlencode }}"
+        method: GET
+        return_content: yes
+      register: site_xml
+
+    # TODO: Check the PRODUCTION state
+    # # xml module version to obtain URL
+    # - name: Parse site xml response
+    #   xml:
+    #     xmlstring: "{{ site_xml.content }}"
+    #     xpath: /results/SERVICE_ENDPOINT/URL
+    #     content: text
+    #   register: site_xml
+
+    # - set_fact:
+    #     site_endpoint: "{{ site_xml.matches.0.URL }}"
+
+    # - debug:
+    #     msg: "{{ site_endpoint }}"
+
+    # regex version to obtain URL
+    - set_fact:
+        site_endpoint: "{{ ( site_xml.content | regex_search('<URL>(.+)</URL>', '\\1') | first ).rstrip('/') }}"
+
+    - debug:
+        msg: "{{ site_endpoint }}"
+
+# Getting unscoped token, project id and env for openstack
+    - block:
+
+      - debug:
+          msg: "{{ site_auth_endpoint }} {{ site_project_endpoint }}"
+        
+      - name: Get unscoped token
+        uri: 
+          url: "{{ site_auth_endpoint }}"
+          method: POST
+          status_code: 201
+          headers:
+            Authorization: "Bearer {{ access_token }}"
+        register: site_auth_token_response
+
+      - set_fact:
+          unscoped_token: "{{ site_auth_token_response.x_subject_token }}"
+
+      - debug:
+          msg: "{{ unscoped_token }}"
+
+      - name: Get project id
+        uri: 
+          url: "{{ site_project_endpoint }}"
+          method: GET
+          headers:
+            X-Auth-Token: "{{ unscoped_token }}"
+        register: site_project_response
+
+      - set_fact:
+          # TODO: can be several projects
+          # TODO: check other parameters, e.g. enabled
+          project_id: "{{ site_project_response.json.projects.0.id }}"
+
+      - debug:
+          msg: "{{ project_id }}"
+
+      - set_fact:
+          scoped_token_request:
+            auth:
+              identity:
+                methods: ["token"]
+                token:
+                  id: "{{ unscoped_token }}"
+              scope:
+                project:
+                  id: "{{ project_id }}"
+
+      - name: Get scoped token
+        uri: 
+          url: "{{ site_token_endpoint }}"
+          method: POST
+          body: "{{ scoped_token_request }}"
+          body_format: json
+          status_code: 201
+        register: scoped_token_response
+
+      - set_fact:
+          scoped_token: "{{ scoped_token_response.x_subject_token }}"
+
+      - debug:
+          msg: "{{ scoped_token }}"
+
+      - set_fact:
+          os_env:
+            OS_AUTH_URL: "{{ site_endpoint }}"
+            OS_AUTH_TYPE: "v3oidcaccesstoken"
+            OS_IDENTITY_PROVIDER: "egi.eu"
+            OS_PROTOCOL: "{{ PROTOCOL }}"
+            OS_ACCESS_TOKEN: "{{ access_token }}"
+            OS_PROJECT_ID: "{{ project_id }}"   
+            OS_USER_DOMAIN_NAME: ""
+            OS_REGION_NAME: ""
+            OS_PROJECT_NAME: ""        
+
+      - debug:
+          msg: "{{ os_env }}"
+
+      vars:
+        site_ep_basename: "{{ site_endpoint | basename }}"
+        site_ep_dirname: "{{ site_endpoint | dirname }}"
+        site_endpoint_prefix: "{{ (site_ep_dirname + '%s') if ('v3' in site_ep_basename or 'v2.0' in site_ep_basename) else (site_endpoint + '%s') }}"
+        site_auth_endpoint: "{{ site_endpoint_prefix | format(auth_path) }}"
+        site_project_endpoint: "{{ site_endpoint_prefix | format(project_path) }}"
+        site_token_endpoint: "{{ site_endpoint_prefix | format(token_path) }}"

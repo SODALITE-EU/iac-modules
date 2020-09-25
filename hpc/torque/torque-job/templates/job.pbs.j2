@@ -1,0 +1,30 @@
+{% set lines = lookup('file', job_script).splitlines() %}
+{% if  lines[0].startswith("#!") %}
+#PBS -S {{ lines[0][2:] }}
+{% else %}
+#PBS -S /bin/bash
+{% endif %}
+
+#PBS -m abe
+#PBS -N {{ job_name }}
+#PBS -l nodes={{ job_node_name if job_node_name is defined else job_nb_nodes }}:ppn={{ job_ppn }}{% if job_gpus > 0 %},gpus={{ job_gpus }}{% endif %}{% if (job_queue is defined) and (job_queue|length > 0) %}:{{ job_queue }}{% endif %},walltime={{ job_walltime }}
+
+{% if job_email is defined and job_email != "" %}
+#PBS -M {{ job_email }}
+{% endif %}
+
+{% if job_enable_audit %}
+#PBS -l epilogue={{ job_workspace_path }}/audit.sh
+{% endif %}
+
+{% if job_queue is defined %}
+#PBS -q {{ job_queue }}
+{% endif %}
+
+{% if job_scratch is defined %}
+export SCRATCH={{ job_scratch }}
+{% endif %}
+
+{% for line in lines[1:] %}
+{{ line }}
+{% endfor%}

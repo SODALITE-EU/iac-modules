@@ -1,0 +1,46 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Execute command (linux)
+        shell:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+          cmd:          "{{ command }}"
+        register: command_output
+        when: host_os == 'linux'
+
+      - name: Execute command (windows)
+        win_shell: "{{ command }}"
+        args:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+        register: co
+        when: host_os == 'windows'
+
+      - set_fact:
+          command_output: "{{co}}"
+        when: command_output is undefined
+
+      - name: Evaluate the expression for stdout
+        set_stats:
+          data:
+            checked_against: "{{ command_output.stdout }}"
+            status: "{{ (not regex and command_output.stdout == comparable_string) or (regex and command_output.stdout is regex(comparable_string)) }}"
+        when: compare_to == 'stdout'
+
+      - name: Evaluate the expression for stderr
+        set_stats:
+          data:
+            checked_against: "{{ command_output.stderr }}"
+            status: "{{ (not regex and command_output.stderr == comparable_string) or (regex and command_output.stderr is regex(comparable_string)) }}"
+        when: compare_to == 'stderr'
+      rescue:
+        - name: If the command execution fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

@@ -1,0 +1,527 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+  sodalite.nodes.Tests:
+    derived_from: tosca.nodes.SoftwareComponent
+    attributes:
+      status:
+        type: string
+        description: Serves as a return value of the test
+      checked_against:
+        type: string
+        description: Serves as a return value of the data that the test is testing
+
+  sodalite.nodes.Tests.Text:
+    derived_from: sodalite.nodes.Tests
+    properties:
+      comparable_string:
+        type: string
+        description: String to compare to the file's contents. This parameter usage depends on the regex property.
+        required: true
+      regex:
+        type: boolean
+        description: If true, comparable string is used as regex pattern to search the string against. Otherwise a direct comparison is made.
+        default: false
+        required: true
+
+  sodalite.nodes.Tests.Text.File:
+    derived_from: sodalite.nodes.Tests.Text
+    properties:
+      file_location:
+        type: string
+        description: Path to the file to be tested
+        required: true
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:         { default: { get_property: [ SELF, file_location ] } }
+              comparable_string:     { default: { get_property: [ SELF, comparable_string ] } }
+              regex:                 { default: { get_property: [ SELF, regex ] } }
+            implementation:
+              primary: file/text_contents.yaml
+
+  sodalite.nodes.Tests.Text.URI:
+    derived_from: sodalite.nodes.Tests.Text
+    description: Base node for all URI based tests. URI test node that checks whether the response content equals to the provided string or matches it against a regex pattern if regex property is true. All parameter descriptions can be found at https://docs.ansible.com/ansible/latest/modules/uri_module.html
+    properties:
+      url:
+        type: string
+        description: HTTP or HTTPS URL in the form (http|https)://host.domain[:port]/path
+      attributes:
+        type: string
+        default: null
+        required: false
+      body:
+        type: string
+        default: null
+        required: false
+      body_format:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ form-urlencoded, json, raw ]
+        default: raw
+      method:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ GET, HEAD, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH ]
+        default: GET
+      client_cert:
+        type: string
+        default: null
+        required: false
+      client_key:
+        type: string
+        default: null
+        required: false
+      follow_redirects:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ all, no, none, safe, urllib2, yes ]
+        default: safe
+      force:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ yes, no ]
+        default: no
+      force_basic_auth:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ yes, no ]
+        default: no
+      group:
+        type: string
+        default: null
+        required: false
+      headers:
+        type: map
+        default: null
+        required: false
+        entry_schema:
+          type: string
+      http_agent:
+        type: string
+        default: null
+        required: false
+      mode:
+        type: string
+        default: null
+        required: false
+      owner:
+        type: string
+        default: null
+        required: false
+      remote_src:
+        type: string
+        required: false
+        constraints:
+          - valid_values: [ yes, no ]
+        default: no
+      removes:
+        type: string
+        default: null
+        required: false
+      src:
+        type: string
+        default: null
+        required: false
+      status_code:
+        type: string
+        default: null
+        required: false
+      timeout:
+        type: string
+        default: null
+        required: false
+    attributes:
+      response_status:
+        type: string
+        description: Server's response status
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              url:                { default: { get_property: [ SELF, url ] } }
+              attributes:         { default: { get_property: [ SELF, attributes ] } }
+              body:               { default: { get_property: [ SELF, body ] } }
+              body_format:        { default: { get_property: [ SELF, body_format ] } }
+              method:             { default: { get_property: [ SELF, method ] } }
+              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { default: { get_property: [ SELF, group ] } }
+              headers:            { default: { get_property: [ SELF, headers ] } }
+              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
+              mode:               { default: { get_property: [ SELF, mode ] } }
+              owner:              { default: { get_property: [ SELF, owner ] } }
+              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
+              removes:            { default: { get_property: [ SELF, removes ] } }
+              src:                { default: { get_property: [ SELF, src ] } }
+              creates:            { default: null }
+              dest:               { default: null }
+              status_code:        { default: { get_property: [ SELF, status_code ] } }
+              timeout:            { default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { default: { get_property: [ SELF, regex ] } }
+            implementation:
+              primary: uri/response_body.yaml
+
+  sodalite.nodes.Tests.Text.URI.Download:
+    derived_from: sodalite.nodes.Tests.Text.URI
+    description: URI test node that checks whether the response content equals/matches regex of the provided string. All parameter descriptions can be found at https://docs.ansible.com/ansible/latest/modules/uri_module.html
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              url:                { default: { get_property: [ SELF, url ] } }
+              attributes:         { default: { get_property: [ SELF, attributes ] } }
+              body:               { default: { get_property: [ SELF, body ] } }
+              body_format:        { default: { get_property: [ SELF, body_format ] } }
+              method:             { default: { get_property: [ SELF, method ] } }
+              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { default: { get_property: [ SELF, group ] } }
+              headers:            { default: { get_property: [ SELF, headers ] } }
+              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
+              mode:               { default: { get_property: [ SELF, mode ] } }
+              owner:              { default: { get_property: [ SELF, owner ] } }
+              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
+              removes:            { default: { get_property: [ SELF, removes ] } }
+              src:                { default: { get_property: [ SELF, src ] } }
+              creates:            { default: null }
+              dest:               { default: null }
+              status_code:        { default: { get_property: [ SELF, status_code ] } }
+              timeout:            { default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { default: { get_property: [ SELF, regex ] } }
+            implementation:
+              primary: uri/download_body.yaml
+
+  sodalite.nodes.Tests.Text.URI.Redirect:
+    derived_from: sodalite.nodes.Tests.Text.URI
+    description: URI test node that checks whether the redirect URL equals/matches regex of the provided string. All parameter descriptions can be found at https://docs.ansible.com/ansible/latest/modules/uri_module.html
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              url:                { default: { get_property: [ SELF, url ] } }
+              attributes:         { default: { get_property: [ SELF, attributes ] } }
+              body:               { default: { get_property: [ SELF, body ] } }
+              body_format:        { default: { get_property: [ SELF, body_format ] } }
+              method:             { default: { get_property: [ SELF, method ] } }
+              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { default: { get_property: [ SELF, group ] } }
+              headers:            { default: { get_property: [ SELF, headers ] } }
+              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
+              mode:               { default: { get_property: [ SELF, mode ] } }
+              owner:              { default: { get_property: [ SELF, owner ] } }
+              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
+              removes:            { default: { get_property: [ SELF, removes ] } }
+              src:                { default: { get_property: [ SELF, src ] } }
+              creates:            { default: null }
+              dest:               { default: null }
+              status_code:        { default: { get_property: [ SELF, status_code ] } }
+              timeout:            { default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { default: { get_property: [ SELF, regex ] } }
+            implementation:
+              primary: uri/redirect.yaml
+
+  sodalite.nodes.Tests.Text.URI.Response:
+    derived_from: sodalite.nodes.Tests.Text.URI
+    description: URI test node that checks whether the redirect URL equals/matches regex of the provided string. All parameter descriptions can be found at https://docs.ansible.com/ansible/latest/modules/uri_module.html
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              url:                { default: { get_property: [ SELF, url ] } }
+              attributes:         { default: { get_property: [ SELF, attributes ] } }
+              body:               { default: { get_property: [ SELF, body ] } }
+              body_format:        { default: { get_property: [ SELF, body_format ] } }
+              method:             { default: { get_property: [ SELF, method ] } }
+              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { default: { get_property: [ SELF, group ] } }
+              headers:            { default: { get_property: [ SELF, headers ] } }
+              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
+              mode:               { default: { get_property: [ SELF, mode ] } }
+              owner:              { default: { get_property: [ SELF, owner ] } }
+              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
+              removes:            { default: { get_property: [ SELF, removes ] } }
+              src:                { default: { get_property: [ SELF, src ] } }
+              creates:            { default: null }
+              dest:               { default: null }
+              status_code:        { default: { get_property: [ SELF, status_code ] } }
+              timeout:            { default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { default: { get_property: [ SELF, regex ] } }
+            implementation:
+              primary: uri/response_code.yaml
+
+  sodalite.nodes.Tests.Text.Command:
+    derived_from: sodalite.nodes.Tests.Text
+    properties:
+      command:
+        type: string
+        description: Command for execution
+      dir:
+        type: string
+        description: Command execution home (leave empty to leave it current)
+        default: ""
+      executable:
+        type: string
+        description: Shell used to execute the command (leave empty to leave it current)
+        default: ""
+      compare_to:
+        type: string
+        description: Use stdout/stderr to compare to the comparable string.
+        constraints:
+          - valid_values: [ stdout, stderr ]
+        default: stdout
+      host_os:
+        type: string
+        description: Selects which command execution module is used depending on the os
+        constraints:
+          - valid_values: [ linux, windows ]
+        default: linux
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              command:                { default: { get_property: [ SELF, command ] } }
+              dir:                    { default: { get_property: [ SELF, dir ] } }
+              executable:             { default: { get_property: [ SELF, executable ] } }
+              comparable_string:      { default: { get_property: [ SELF, comparable_string ] } }
+              regex:                  { default: { get_property: [ SELF, regex ] } }
+              compare_to:             { default: { get_property: [ SELF, compare_to ] } }
+              host_os:                { default: { get_property: [ SELF, host_os ] } }
+            implementation:
+              primary: command/response_body.yaml
+
+  sodalite.nodes.Tests.File:
+    derived_from: sodalite.nodes.Tests
+    properties:
+      file_location:
+        type: string
+        description: Path to the file to be tested
+        required: true
+      follow:
+        type: string
+        description: Whether the test follows symlinks (if applicable)
+        constraints:
+          - valid_values: [ yes, no ]
+        default: no
+        required: true
+
+  sodalite.nodes.Tests.File.Exist:
+    derived_from: sodalite.nodes.Tests.File
+    properties:
+      exists:
+        type: boolean
+        description: Toggles between checking for its existance and lack of existance
+        default: true
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:         { default: { get_property: [ SELF, file_location ] } }
+              follow:                { default: { get_property: [ SELF, follow ] } }
+              exists:                { default: { get_property: [ SELF, exists ] } }
+            implementation:
+              primary: file/exist.yaml
+
+  sodalite.nodes.Tests.File.Mode:
+    derived_from: sodalite.nodes.Tests.File
+    properties:
+      mode:
+        type: string
+        description: File's mode
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:        { default: { get_property: [ SELF, file_location ] } }
+              follow:               { default: { get_property: [ SELF, follow ] } }
+              mode:                 { default: { get_property: [ SELF, mode ] } }
+            implementation:
+              primary: file/mode.yaml
+
+  sodalite.nodes.Tests.File.Checksum:
+    derived_from: sodalite.nodes.Tests.File
+    properties:
+      checksum:
+        type: string
+        description: File's supposed checksum
+      checksum_algorithm:
+        type: string
+        description: Algorithm used to calculate the file's checksum
+        default: sha1
+        constraints:
+          - valid_values: [ md5, sha1, sha224, sha256, sha384, sha512 ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:         { default: { get_property: [ SELF, file_location ] } }
+              follow:                { default: { get_property: [ SELF, follow ] } }
+              checksum:              { default: { get_property: [ SELF, checksum ] } }
+              checksum_algorithm:    { default: { get_property: [ SELF, checksum_algorithm ] } }
+            implementation:
+              primary: file/checksum.yaml
+
+  sodalite.nodes.Tests.File.Owner:
+    derived_from: sodalite.nodes.Tests.File
+    properties:
+      owner:
+        type: string
+        description: File's supposed owner
+      check_group:
+        type: boolean
+        description: Determines whether the node checks for the user or the group
+        default: false
+      check_id:
+        type: boolean
+        description: Determines whether the node checks for the name or ID
+        default: false
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:          { default: { get_property: [ SELF, file_location ] } }
+              follow:                 { default: { get_property: [ SELF, follow ] } }
+              owner:                  { default: { get_property: [ SELF, owner ] } }
+              check_group:            { default: { get_property: [ SELF, check_group ] } }
+              check_id:               { default: { get_property: [ SELF, check_id ] } }
+            implementation:
+              primary: file/owner.yaml
+
+  sodalite.nodes.Tests.File.Size:
+    derived_from: sodalite.nodes.Tests.File
+    properties:
+      size:
+        type: integer
+        description: File's supposed/comparable size
+      comparator:
+        type: string
+        description: The comparator used to test the supposed file size with
+        default: eq
+        constraints:
+          - valid_values: [ eq, lt, gt, le, ge ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              file_location:          { default: { get_property: [ SELF, file_location ] } }
+              follow:                 { default: { get_property: [ SELF, follow ] } }
+              size:                   { default: { get_property: [ SELF, size ] } }
+              comparator:             { default: { get_property: [ SELF, comparator ] } }
+            implementation:
+              primary: file/size.yaml
+
+  sodalite.nodes.Tests.Command:
+    derived_from: sodalite.nodes.Tests
+    properties:
+      command:
+        type: string
+        description: Command for execution
+      dir:
+        type: string
+        description: Command execution home (leave empty to leave it current)
+        default: ""
+      executable:
+        type: string
+        description: Shell used to execute the command (leave empty to leave it current)
+        default: ""
+      host_os:
+        type: string
+        description: Selects which command execution module is used depending on the os
+        constraints:
+          - valid_values: [ linux, windows ]
+        default: linux
+
+  sodalite.nodes.Tests.Command.Return:
+    derived_from: sodalite.nodes.Tests.Command
+    properties:
+      response_code:
+        type: integer
+        description: Comparable response code
+        default: 0
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              command:                { default: { get_property: [ SELF, command ] } }
+              dir:                    { default: { get_property: [ SELF, dir ] } }
+              executable:             { default: { get_property: [ SELF, executable ] } }
+              response_code:          { default: { get_property: [ SELF, response_code ] } }
+              host_os:                { default: { get_property: [ SELF, host_os ] } }
+            implementation:
+              primary: command/response_code.yaml
+
+  sodalite.nodes.Tests.Command.Time:
+    derived_from: sodalite.nodes.Tests.Command
+    properties:
+      time:
+        type: float
+        description: Command's supposed/comparable duration
+      comparator:
+        type: string
+        description: The comparator used to test the supposed command execution duration with
+        default: lt
+        constraints:
+          - valid_values: [ eq, lt, gt, le, ge ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              command:                { default: { get_property: [ SELF, command ] } }
+              dir:                    { default: { get_property: [ SELF, dir ] } }
+              executable:             { default: { get_property: [ SELF, executable ] } }
+              time:                   { default: { get_property: [ SELF, time ] } }
+              comparator:             { default: { get_property: [ SELF, comparator ] } }
+              host_os:                { default: { get_property: [ SELF, host_os ] } }
+            implementation:
+              primary: command/time.yaml

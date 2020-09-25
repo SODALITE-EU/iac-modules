@@ -1,0 +1,41 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: >
+        Create temporary inventory for wm, 
+        since opera requires internal envvars to access the target. 
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: wm
+        groups: wm
+        ansible_host: "{{ wm_public_address }}"
+        ansible_user: "{{ wm_username }}"
+        ansible_ssh_private_key_file: "{{ wm_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+
+- hosts: wm
+  gather_facts: yes
+  vars:
+    job_workspace_path: '{{ ( ( job_workspace != None ) | ternary(job_workspace, ansible_env.HOME) ) | replace("~", ansible_env.HOME) }}'
+  tasks:
+    - name: "Create workspace dir"
+      file:
+        dest: "{{ job_workspace_path }}"
+        state: directory
+
+    - name: "Create job script"
+      template:
+        src: "preconfigured-job.pbs.j2"
+        dest: "{{ job_workspace_path }}/{{ job_name }}.pbs"
+
+    - name: "Create audit script"
+      template:
+        src: "audit.sh.j2"
+        dest: "{{ job_workspace_path }}/audit.sh"
+        mode: 0500
+      when: job_enable_audit

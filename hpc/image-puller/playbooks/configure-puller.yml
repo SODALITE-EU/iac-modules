@@ -1,0 +1,69 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: >
+        Create temporary inventory for remote_host, 
+        since opera requires internal envvars to access the target. 
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: "{{ remote_host_public_address }}"
+        groups: "{{ remote_host_public_address }}"
+        ansible_host: "{{ remote_host_public_address }}"
+        ansible_user: "{{ remote_host_username }}"
+        ansible_ssh_private_key_file: "{{ remote_host_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+      when: remote_host_public_address != "localhost"
+
+
+- hosts: "{{ remote_host_public_address }}"
+  gather_facts: yes
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin"
+  tasks:
+    - name: "Create images dir"
+      file:
+        dest: "{{ images_location }}"
+        state: directory
+
+    - name: "When private repository, configure puller"
+      block:
+        - name: "Check private registry and output"
+          fail:
+            msg: For private registry the output should be specified
+          when: output is not defined
+
+        - name: "Create certs dir"
+          file:
+            dest: "{{ certs_location }}"
+            state: directory
+
+        - name: "Register certificates existence"
+          stat:
+            path: "{{ certs_location }}/{{ item }}"
+          register: stat_results
+          with_items:
+            - ca.crt
+            - client.cert
+            - client.key
+        
+        - name: "Check certificates existence"
+          fail:
+            msg: "{{ item.item }}"
+          with_items: "{{ stat_results.results }}"
+          when: item.stat.exists == False
+
+        - name: "Check puller image existence"
+          stat:
+            path: "{{ puller_image }}"
+          register: image_status
+
+        - name: "Download puller"
+          shell: singularity pull {{ puller_image }} docker://{{ puller_image_remote }}
+          when: image_status.stat.exists == false
+          
+      when: registry == 'private'

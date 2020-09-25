@@ -1,0 +1,41 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: "Install gridftp client and proxy on Ubuntu"
+      become: yes
+      apt:
+        name:
+          - globus-proxy-utils
+          - globus-gass-copy-progs
+          - tree
+        state: present
+        update_cache: yes
+
+    - name: Create certs directory
+      file:
+        path: "{{ cert_path }}"
+        state: directory
+
+    - name: Copy certs artifacts
+      block:
+        - copy:
+            src: certs/
+            dest: "{{ cert_path }}/"
+
+    - name: Copy initial data artifacts
+      block:
+        - copy:
+            src: data/
+            dest: "{{ initial_data_path }}/"
+
+    - name: Adding hostnames
+      become: yes
+      lineinfile:
+        dest: /etc/hosts
+        regexp: '.*{{ item.key }}$'
+        line: "{{ item.value }} {{ item.key }}"
+        state: present
+      with_dict: "{{ hostnames }}"
+      when: hostnames is defined

@@ -1,0 +1,6 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: "Create proxy"
+      shell: "grid-proxy-init -debug -verify -cert {{ cert_path }}/{{ cert }} -key {{ cert_path }}/{{ key }} -certdir {{ cert_path }}/{{ certdir }}"

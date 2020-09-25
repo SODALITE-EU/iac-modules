@@ -1,0 +1,75 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: >
+        Create temporary inventory for remote_host, 
+        since opera requires internal envvars to access the target. 
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: "{{ remote_host_public_address }}"
+        groups: "{{ remote_host_public_address }}"
+        ansible_host: "{{ remote_host_public_address }}"
+        ansible_user: "{{ remote_host_username }}"
+        ansible_ssh_private_key_file: "{{ remote_host_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+      when: remote_host_public_address != "localhost"
+
+
+- hosts: "{{ remote_host_public_address }}"
+  gather_facts: yes
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin"
+  tasks:
+
+    - set_fact:
+        output_exists: "{{ output is defined and output | length > 0 }}"
+
+    - name: "Check image existence"
+      stat:
+        path: "{{ images_location }}/{{ output }}"
+      register: image_status
+      when: output_exists
+
+    - set_fact:
+        image_exists: "{{ output_exists and image_status.stat.exists == true }}"
+
+    - name: "When private repository, download using puller"
+      block:
+        - name: "Download tar image"
+          shell: >
+            singularity run \
+              -B {{ certs_location }}:/certs \
+              -B {{ images_location }}:/images \
+              {{ puller_image }} {{ output }} {{ image }}
+        - name: "Convert tar to sif"
+          shell: >
+            singularity build \
+              {{ images_location }}/{{ output }} \
+              docker-archive://{{ images_location }}/{{ output }}.tar.gz
+
+      when: image_exists == false and registry == 'private'
+
+    - name: "Otherwise, download normally"
+      block:
+        - name: Pulling image
+          shell: >
+            singularity pull \
+              --dir {{ images_location }} \
+              {{ output }} \
+              {{ image_path }}
+          register: pull_status 
+          ignore_errors: yes
+          vars:
+            image_path: "{{ image if image is search('(docker|library|shub)://') else registry + '://' + image }}"
+        
+        # ignoring only "Image file already exists" error
+        - fail:
+            msg: Error occurred while pulling
+          when: "pull_status.rc != 0 and 'Image file already exists' not in pull_status.stderr" 
+
+      when: image_exists == false and registry != 'private'

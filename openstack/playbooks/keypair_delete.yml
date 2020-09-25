@@ -1,0 +1,19 @@
+---
+- name: Refresh token and update env
+  import_playbook: egi_refresh_token.yml
+  when: env.checkin_env is defined
+
+- hosts: all
+  gather_facts: no
+
+  tasks:
+    - set_fact:
+        os_env: "{{ env.os_env }}"
+      when: env.os_env is defined  
+
+    - name: Delete keypair
+      os_keypair:  
+        name: "{{ name }}"
+        state: absent
+      ignore_errors: True
+      environment: "{{ os_env if os_env is defined }}"

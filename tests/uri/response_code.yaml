@@ -1,0 +1,49 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Execute the URI request
+        uri:
+          url:              "{{ url|default(omit, true) }}"
+          attributes:       "{{ attributes|default(omit, true) }}"
+          body:             "{{ body|default(omit, true) }}"
+          body_format:      "{{ body_format|default(omit, true) }}"
+          method:           "{{ method|default(omit, true) }}"
+          client_cert:      "{{ client_cert|default(omit, true) }}"
+          client_key:       "{{ client_key|default(omit, true) }}"
+          follow_redirects: "{{ follow_redirects|default(omit, true) }}"
+          force:            "{{ force|default(omit, true) }}"
+          force_basic_auth: "{{ force_basic_auth|default(omit, true) }}"
+          group:            "{{ group|default(omit, true) }}"
+          headers:          "{{ headers|default(omit, true) }}"
+          http_agent:       "{{ http_agent|default(omit, true) }}"
+          mode:             "{{ mode|default(omit, true) }}"
+          owner:            "{{ owner|default(omit, true) }}"
+          remote_src:       "{{ remote_src|default(omit, true) }}"
+          removes:          "{{ removes|default(omit, true) }}"
+          return_content:   yes
+          src:              "{{ src|default(omit, true) }}"
+          status_code:      "{{ status_code|default(omit, true) }}"
+          creates:          "{{ creates|default(omit, true) }}"
+          dest:             "{{ dest|default(omit, true) }}"
+          timeout:          "{{ timeout|default(omit, true) }}"
+        register: request_result
+
+      - name: Save returned content and response code
+        set_stats:
+          data:
+            checked_against: "{{ request_result.status }}"
+            response_status: "{{ request_result.status }}"
+
+      - name: Evaluate the expression
+        set_stats:
+          data:
+            status: "{{ (not regex and request_result.status == comparable_string) or (regex and request_result.status is regex(comparable_string)) }}"
+      rescue:
+        - name: If the request fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

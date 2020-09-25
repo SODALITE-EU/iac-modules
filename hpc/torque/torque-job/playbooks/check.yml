@@ -1,0 +1,86 @@
+---
+  - hosts: all
+    gather_facts: no
+    tasks:
+    - name: >
+        Create temporary inventory for wm, 
+        since opera requires internal envvars to access the target. 
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: wm
+        groups: wm
+        ansible_host: "{{ wm_public_address }}"
+        ansible_user: "{{ wm_username }}"
+        ansible_ssh_private_key_file: "{{ wm_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+  
+  - hosts: wm # should be ansible module for Torque to handle jobs and their states
+    gather_facts: yes
+    vars:
+      epoch: "00:00:00"
+      walltime: "{{ job_walltime }}"
+      walltime_sec: "{{ (walltime | to_datetime('%H:%M:%S')).strftime('%s') | int - (epoch | to_datetime('%H:%M:%S')).strftime('%s') | int }}"
+      monitor_period: "{{ job_monitor_period }}" # overall monitoring delay: consists of 2 delay steps due to poll of async and delay of until loop
+      monitor_delay_step: "{{ (monitor_period / 2) | round | int }}" # each step is half of overall delay
+      monitor_retries_headroom: "{{ job_monitor_retries_headroom }}" # additional retries for long job completion
+      monitor_retries: "{{ (walltime_sec | int /  monitor_period) | round | int + monitor_retries_headroom }}"
+      job_workspace_path: '{{ ( ( job_workspace != None ) | ternary(job_workspace, ansible_env.HOME) ) | replace("~", ansible_env.HOME) }}'
+    tasks:
+    - name: Run continuously qstat to monitor the status of the job
+      shell: qstat -f {{ job_id }} | grep 'job_state' | grep -o '.$'
+      register: job_monitor
+      until: "job_monitor.stdout == 'C'"
+      delay: "{{ monitor_delay_step }}"
+      retries: "{{ monitor_retries }}"
+      async: "{{ walltime_sec | int }}"
+      poll: "{{ monitor_delay_step }}"
+
+    - name: Wait the status monitoring to finish
+      async_status:
+        jid: "{{ job_monitor.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: "{{ monitor_retries }}"
+
+    - name: set state deleted after job is completed
+      set_stats:
+        data:
+          state: "deleted"
+
+    - name: Check the exit status
+      shell: qstat -f {{ job_id }} | grep 'exit_status' | egrep -o '[^ ]+$'
+      register: job_exit_status
+
+    # Do some failure mitigation actions here
+    - name: React to the error
+      shell: echo "Here should be failure management"
+      when: "job_exit_status.stdout != '0'"
+
+    - fail:
+        msg: "Job stopped with non-zero exit {{ job_exit_status.stdout }}"
+      when: "job_exit_status.stdout != '0'"
+
+    # audit.yml is not copied to /tmp by xOpera, therefore the location should be hardcoded
+    # - name: Audit the job
+    #   include: audit.yml 
+    #   when: job_enable_audit
+
+    - name: Audit the job
+      block:
+
+        - name: Register audit statistics
+          slurp:
+            src: "{{ job_workspace_path }}/{{ job_name }}.{{ job_id }}.stat"
+          register: audit
+        - debug:
+            msg: "{{ audit['content'] | b64decode | from_yaml }}"
+        - name: save audit attribute
+          set_stats:
+            data:
+              audit: "{{ audit['content'] | b64decode | from_yaml }}"
+      
+      when: job_enable_audit

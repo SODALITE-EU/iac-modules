@@ -1,0 +1,29 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: >
+        Create temporary inventory for remote_host, 
+        since opera requires internal envvars to access the target. 
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: "{{ remote_host_public_address }}"
+        groups: "{{ remote_host_public_address }}"
+        ansible_host: "{{ remote_host_public_address }}"
+        ansible_user: "{{ remote_host_username }}"
+        ansible_ssh_private_key_file: "{{ remote_host_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+      when: remote_host_public_address != "localhost"
+
+
+- hosts: "{{ remote_host_public_address }}"
+  gather_facts: no
+  tasks:
+    - name: Ansible create file with content example
+      copy:
+        dest: "{{ location }}"
+        content: "{{ content }}"

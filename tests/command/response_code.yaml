@@ -1,0 +1,38 @@
+---
+- hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Execute the tests and catch any errors
+      block:
+      - name: Execute command (linux)
+        shell:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+          cmd:          "{{ command }}"
+        register: command_output
+        when: host_os == 'linux'
+
+      - name: Execute command (windows)
+        win_shell: "{{ command }}"
+        args:
+          chdir:        "{{ dir|default(omit, true) }}"
+          executable:   "{{ executable|default(omit, true) }}"
+        register: co
+        when: host_os == 'windows'
+
+      - set_fact:
+          command_output: "{{co}}"
+        when: command_output is undefined
+
+      - name: Evaluate the expression
+        set_stats:
+          data:
+            checked_against: "{{ command_output.rc }}"
+            status: "{{ command_output.rc == response_code }}"
+      rescue:
+        - name: If the command execution fails set status to false
+          set_stats:
+            data:
+              status: false
+              response_status: "{{ ansible_failed_result }}"

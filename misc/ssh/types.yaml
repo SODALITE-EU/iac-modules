@@ -12,7 +12,7 @@ node_types:
             inputs:
               public_ipv4_address: { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
             implementation:
-              primary: playbooks/ssh-key/create.yml
+              primary: playbooks/create.yml
           delete: 
             implementation:
-              primary: playbooks/ssh-key/delete.yml
+              primary: playbooks/delete.yml

@@ -1,0 +1,13 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: Install sample site
+      copy:
+        dest: "{{ destination }}"
+        src: site.html
+    - name: Change permissions    
+      file:
+        path: "{{ destination }}"
+        mode: 0777        

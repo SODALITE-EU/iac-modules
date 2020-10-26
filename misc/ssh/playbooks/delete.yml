@@ -1,0 +1,34 @@
+- hosts: all
+  become_user: root
+  become: yes
+  tasks:
+  - name: Find OpenStack keys
+    find:
+      paths: "/root/.ssh/"
+      patterns: "*xOpera*"
+    register: files_to_delete
+
+  - name: Find public keys
+    find:
+      paths: "/root/.ssh/"
+      patterns: "*xOpera*.pubk"
+    register: files_public
+
+  - name: Read keys
+    slurp:
+      src: "{{ item.path }}"
+    register: keys
+    with_items: "{{ files_public.files }}"  
+  
+  - name: Remove from authorized keys
+    authorized_key:
+      user: "{{ ansible_user }}"
+      state: absent
+      key: '{{ item.content | b64decode }}'
+    with_items: "{{ keys['results'] }}"     
+
+  - name: Delete OpenStack keys
+    file:
+      path: "{{ item.path }}"
+      state: absent
+    with_items: "{{ files_to_delete.files }}"

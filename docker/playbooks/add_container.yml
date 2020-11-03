@@ -27,6 +27,8 @@
         "{{ env }}"
       env_file: 
         "{{ env_file }}"  
+      capabilities:
+        "{{ capabilities }}"    
       ports:
          "{{ ports }}"
       exposed_ports:
@@ -61,6 +63,8 @@
         "{{ env }}"
       env_file: 
         "{{ env_file }}"  
+      capabilities:
+        "{{ capabilities }}"          
       ports:
          "{{ ports }}"
       exposed_ports:

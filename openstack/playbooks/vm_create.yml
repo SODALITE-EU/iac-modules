@@ -66,6 +66,7 @@
         create_home: no
   
     - name: Download Node exporter
+      become: yes
       get_url:
         url: "https://github.com/prometheus/node_exporter/releases/download/v1.0.1/node_exporter-1.0.1.linux-amd64.tar.gz"
         dest: /tmp
@@ -76,13 +77,14 @@
       unarchive:
         src: "/tmp/node_exporter-1.0.1.linux-amd64.tar.gz"
         dest: "/tmp"
-        remote_src: yes
+        remote_src: true
     
     - name: Copy executable
       become: yes
       copy: 
         src: "/tmp/node_exporter-1.0.1.linux-amd64/node_exporter"
         dest: "/usr/local/bin"
+        remote_src: true
     
     - name: Give the user "node_exporter" permission to that binary
       become: yes
@@ -93,14 +95,16 @@
         mode: "0755"
         
     - name: Delete compressed download
+      become: yes
       file:
         path: "/tmp/node_exporter-1.0.1.linux-amd64.tar.gz"
         state: absent
   
- #   - name: Delete folder
- #     file:
- #       path: "/tmp/node_exporter-1.0.1.linux-amd64/"
- #       state: absent    
+    - name: Delete folder
+      become: yes
+      file:
+        path: "/tmp/node_exporter-1.0.1.linux-amd64/"
+        state: absent    
   
     - name: Create Node exporter Service File
       become: yes

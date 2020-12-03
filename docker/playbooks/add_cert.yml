@@ -7,6 +7,12 @@
     pip_install_packages:
       - name: cryptography
 
+  pre_tasks:
+    - name: Set vars for Cent OS backward compatibility
+      set_fact:
+        pip_package: python-pip
+      when: ansible_distribution == "CentOS"
+
   tasks:
     - set_fact:
         alt_name: "IP:{{ public_ipv4_address }}"

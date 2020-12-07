@@ -52,7 +52,12 @@ node_types:
         description: List of capabilities to add to the container.
         required: False
         type: list    
-        default: []                
+        default: []
+      labels:
+        description: Dictionary of key value pairs.
+        required: False
+        type: map
+        default: {}
       image_name:
         description: The name of the image on the host
         required: True
@@ -120,6 +125,7 @@ node_types:
               env_file:             { type: string,  default: { get_property: [ SELF, env_file ] } } 
               ports:                { type: list,    default: { get_property: [ SELF, ports ] } }
               capabilities:         { type: list,    default: { get_property: [ SELF, capabilities ] } }
+              labels:               { type: map,     default: { get_property: [ SELF, labels ] } }
               restart_policy:       { type: string,  default: { get_property: [ SELF, restart_policy ] } }
               image_name:           { type: string,  default: { get_property: [ SELF, image_name ] } }
               alias:                { type: string,  default: { get_property: [ SELF, alias ] } }

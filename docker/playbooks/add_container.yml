@@ -38,6 +38,7 @@
       client_key: "{{ client_key }}"
       etc_hosts:
         "{{ etc_hosts }}"
+      labels: "{{ labels }}"
       networks:
         - name: "{{ docker_network_name }}"        
           aliases:
@@ -74,6 +75,7 @@
       client_key: "{{ client_key }}"
       etc_hosts:
         "{{ etc_hosts }}"
+      labels: "{{ labels }}"
         
     notify:
       - "{{ alias }} sleep"

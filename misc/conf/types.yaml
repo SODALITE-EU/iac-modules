@@ -40,6 +40,6 @@ node_types:
               template_name:      { type: string, default: { get_property: [ SELF, template_name ] } }       
               permissions:        { type: string, default: { get_property: [ SELF, permissions ] } }       
             implementation:
-              primary: playbooks/config/create_conf.yml
+              primary: playbooks/create_conf.yml
 
     

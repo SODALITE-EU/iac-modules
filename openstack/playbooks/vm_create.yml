@@ -12,7 +12,15 @@
   tasks:
     - set_fact:
         os_env: "{{ env.os_env }}"
-      when: env.os_env is defined  
+      when: env.os_env is defined
+
+    - set_fact:
+        additional_ssh_args: "{{ '-o ' +
+                                ssh_config.keys()|
+                                zip(ssh_config.values())|
+                                map('join', '=')|
+                                join(' -o ') }}"
+      when: ssh_config is defined
 
     - name: Create VM
       os_server:
@@ -48,6 +56,7 @@
           -o BatchMode=yes
           -o UserKnownHostsFile=/dev/null
           -o StrictHostKeyChecking=no
+          {{ additional_ssh_args | default("") }}
 
 
 - hosts: vms

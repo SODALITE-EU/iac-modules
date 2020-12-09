@@ -5,4 +5,4 @@
   - name: "add docker volume"
     docker_volume:
       name: "{{ volume_name }}"
-   
+      recreate: "{{ recreate }}"

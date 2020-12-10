@@ -23,8 +23,13 @@ node_types:
         required: true
       domain_name:
         type: string
-        description: Domain name (or IP if using without domain) of server. This will be mapped to 'Common name'
-        required: true
+        description: Domain name of server. If missing, it will be set to IP. This will be mapped to 'Common name'.
+        required: false
+        default: ""
+    attributes:
+      cert_files_prefix:
+        type: string
+        description:  Certificate filename prefix. Full cert path is [cert_path]/[cert_files_prefix].crt
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -35,9 +40,8 @@ node_types:
               organization_name:        { type: string, default: { get_property: [ SELF, organization_name ] } }
               email_address:            { type: string, default: { get_property: [ SELF, email_address ] } }
               public_ipv4_address:      { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
-              common_name:              { type: string, default: { get_attribute: [ SELF, host, name ] } }
-              cert_path:                { type: string, default: { get_attribute: [ SELF, cert_path ] } }
-              domain_name:              { type: string, default: { get_attribute: [ SELF, domain_name ] } }
+              cert_path:                { type: string, default: { get_property: [ SELF, cert_path ] } }
+              domain_name:              { type: string, default: { get_property: [ SELF, domain_name ] } }
             implementation:
               primary: playbooks/create.yml
               dependencies:

@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become_user: root
+  become: yes
+
+  tasks:
+    - set_fact:
+        config_file_path: "{{ dir }}/{{ filename }}"
+    - name: Delete the path to certs
+      file:
+          path: "{{ config_file_path }}"
+          state: absent

@@ -24,8 +24,11 @@
     - set_fact:
         cert_path: "/etc/docker/certs.d/{{ registry_ip }}"
 
-    - name: Create certs folder
+    - name: Create fresh certs folder
       block:
+        - file:
+            path: "{{ cert_path }}"
+            state: absent
         - file:
             path: "{{ cert_path }}"
             state: directory

@@ -20,11 +20,14 @@
     - set_fact:
         alt_name: "URI:{{ public_ipv4_address }}"
       when: public_ipv4_address == "localhost"
-    
     - set_fact:
-        cert_path: "/etc/docker/certs.d/{{ registry_ip }}"
+        common_name: "{{ domain_name }}"
+      when: domain_name != ""
+    - set_fact:
+        common_name: "{{ public_ipv4_address }}"
+      when: domain_name == ""
 
-    - name: Create fresh certs folder
+    - name: Create fresh certs dir
       block:
         - file:
             path: "{{ cert_path }}"
@@ -57,31 +60,36 @@
         - command: update-ca-certificates
       when: ansible_distribution == "Ubuntu"        
 
-    - name: Generate certificates for communication with the registry and clean up
+    - name: Generate certificates and clean up
       block:
         - openssl_privatekey:
-            path: "{{ cert_path }}/client.key"
+            path: "{{ cert_path }}/{{ common_name }}.key"
             size: 4096
         - openssl_csr:
-            path: "{{ cert_path }}/client.csr"
-            privatekey_path: "{{ cert_path }}/client.key"
+            path: "{{ cert_path }}/{{ common_name}}.csr"
+            privatekey_path: "{{ cert_path }}/{{ common_name}}.key"
             country_name: "{{ country_name }}"
             organization_name: "{{ organization_name }}"
             email_address:  "{{ email_address }}"
-            common_name: "{{ common_name }}"
+            common_name: "{{ common_name}}"
             subject_alt_name: "{{ alt_name }}"
         - openssl_certificate:
-            path: "{{ cert_path }}/client.cert"
-            csr_path: "{{ cert_path }}/client.csr"
+            path: "{{ cert_path }}/{{ common_name }}.crt"
+            csr_path: "{{ cert_path }}/{{ common_name }}.csr"
             ownca_path: "{{ cert_path }}/ca.crt"
             ownca_privatekey_path: "{{ cert_path }}/ca.key"
             provider: "ownca"
         - file:
             state: absent
-            path: "{{ cert_path }}/client.csr"
+            path: "{{ cert_path }}/{{ common_name}}.csr"
         - file:
             state: absent
             path: "{{ cert_path }}/ca.key"
+
+    - name: Set attributes
+      set_stats:
+        data:
+          cert_files_prefix: "{{ common_name}}"
 
   roles:
     - role: geerlingguy.pip

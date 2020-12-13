@@ -2,14 +2,9 @@ tosca_definitions_version: tosca_simple_yaml_1_3
 
 node_types:
 
-  sodalite.nodes.RegistryCertificate:
+  sodalite.nodes.TLS.Certificate:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
-      registry_ip:
-        type: string
-        description: IP of the SODALITE docker registry
-        required: true
-        default: localhost
       country_name:
         type: string
         description: Country name field of the certificate signing request subject.
@@ -22,25 +17,38 @@ node_types:
         type: string
         description: The emailAddress field of the certificate signing request subject.
         required: true
+      cert_path:
+        type: string
+        description: Path where required files are stored.
+        required: true
+      domain_name:
+        type: string
+        description: Domain name of server. If missing, it will be set to IP. This will be mapped to 'Common name'.
+        required: false
+        default: ""
+    attributes:
+      cert_files_prefix:
+        type: string
+        description:  Certificate filename prefix. Full cert path is [cert_path]/[cert_files_prefix].crt
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
         operations:
           create:
             inputs:
-              registry_ip:              { type: string, default: { get_property: [ SELF, registry_ip ] } }
               country_name:             { type: string, default: { get_property: [ SELF, country_name ] } }
               organization_name:        { type: string, default: { get_property: [ SELF, organization_name ] } }
               email_address:            { type: string, default: { get_property: [ SELF, email_address ] } }
-              public_ipv4_address:      { type: string, default: { get_attribute: [ SELF, host, public_address ] } }                                                              
-              common_name:              { type: string, default: { get_attribute: [ SELF, host, name ] } }
+              public_ipv4_address:      { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
+              cert_path:                { type: string, default: { get_property: [ SELF, cert_path ] } }
+              domain_name:              { type: string, default: { get_property: [ SELF, domain_name ] } }
             implementation:
-              primary: playbooks/add_cert.yml 
-              dependencies: 
+              primary: playbooks/create.yml
+              dependencies:
                 - artifacts/ca.crt
-                - artifacts/ca.key               
+                - artifacts/ca.key
           delete:
             inputs:
-              registry_ip:              { type: string, default: { get_property: [ SELF, registry_ip ] } }
+              cert_path:                { type: string, default: { get_attribute: [ SELF, cert_path ] } }
             implementation:
-              primary: playbooks/remove_cert.yml 
+              primary: playbooks/delete.yml

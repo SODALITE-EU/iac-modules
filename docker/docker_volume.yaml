@@ -9,6 +9,11 @@ node_types:
         type: string
         description: The name of the volume
         required: true
+      recreate:
+        type: string
+        description: Controls when a volume will be recreated
+        required: false
+        default: never
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -17,6 +22,7 @@ node_types:
             inputs:
               volume_name:          { type: string, default: { get_property: [ SELF, name ] } }
               ansible_user:         { type: string, default: { get_property: [ SELF, host, username ] } } 
+              recreate:             { type: string, default: { get_property: [ SELF, recreate ] } }
             implementation:
               primary: playbooks/add_volume.yml 
           delete:

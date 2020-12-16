@@ -9,10 +9,6 @@ node_types:
   sodalite.nodes.DockerizedComponent:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
-      registry_url:
-        description: The URL of the registry containing images
-        required: True
-        type: string
       command:
         description: Commands list for starting the container
         default: ""

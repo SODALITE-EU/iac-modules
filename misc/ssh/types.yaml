@@ -11,8 +11,11 @@ node_types:
           create:      
             inputs:
               public_ipv4_address: { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
+              ansible_user:        { type: string, default: { get_attribute: [ SELF, host, username       ] } }
             implementation:
               primary: playbooks/create.yml
-          delete: 
+          delete:
+            inputs:
+              ansible_user:        { type: string, default: { get_attribute: [ SELF, host, username       ] } }
             implementation:
               primary: playbooks/delete.yml

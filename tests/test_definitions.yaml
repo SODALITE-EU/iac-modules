@@ -37,9 +37,9 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:         { default: { get_property: [ SELF, file_location ] } }
-              comparable_string:     { default: { get_property: [ SELF, comparable_string ] } }
-              regex:                 { default: { get_property: [ SELF, regex ] } }
+              file_location:         { type: string, default: { get_property: [ SELF, file_location ] } }
+              comparable_string:     { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:                 { type: boolean, default: { get_property: [ SELF, regex ] } }
             implementation:
               primary: file/text_contents.yaml
 
@@ -150,30 +150,30 @@ node_types:
         operations:
           create:
             inputs:
-              url:                { default: { get_property: [ SELF, url ] } }
-              attributes:         { default: { get_property: [ SELF, attributes ] } }
-              body:               { default: { get_property: [ SELF, body ] } }
-              body_format:        { default: { get_property: [ SELF, body_format ] } }
-              method:             { default: { get_property: [ SELF, method ] } }
-              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
-              client_key:         { default: { get_property: [ SELF, client_key ] } }
-              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
-              force:              { default: { get_property: [ SELF, force ] } }
-              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
-              group:              { default: { get_property: [ SELF, group ] } }
-              headers:            { default: { get_property: [ SELF, headers ] } }
-              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
-              mode:               { default: { get_property: [ SELF, mode ] } }
-              owner:              { default: { get_property: [ SELF, owner ] } }
-              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
-              removes:            { default: { get_property: [ SELF, removes ] } }
-              src:                { default: { get_property: [ SELF, src ] } }
-              creates:            { default: null }
-              dest:               { default: null }
-              status_code:        { default: { get_property: [ SELF, status_code ] } }
-              timeout:            { default: { get_property: [ SELF, timeout ] } }
-              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
-              regex:              { default: { get_property: [ SELF, regex ] } }
+              url:                { type: string, default: { get_property: [ SELF, url ] } }
+              attributes:         { type: string, default: { get_property: [ SELF, attributes ] } }
+              body:               { type: string, default: { get_property: [ SELF, body ] } }
+              body_format:        { type: string, default: { get_property: [ SELF, body_format ] } }
+              method:             { type: string, default: { get_property: [ SELF, method ] } }
+              client_cert:        { type: string, default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { type: string, default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { type: string, default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { type: string, default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { type: string, default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { type: string, default: { get_property: [ SELF, group ] } }
+              headers:            { type: map,    default: { get_property: [ SELF, headers ] } }
+              http_agent:         { type: string, default: { get_property: [ SELF, http_agent ] } }
+              mode:               { type: string, default: { get_property: [ SELF, mode ] } }
+              owner:              { type: string, default: { get_property: [ SELF, owner ] } }
+              remote_src:         { type: string, default: { get_property: [ SELF, remote_src ] } }
+              removes:            { type: string, default: { get_property: [ SELF, removes ] } }
+              src:                { type: string, default: { get_property: [ SELF, src ] } }
+              creates:            { type: string, default: null }
+              dest:               { type: string, default: null }
+              status_code:        { type: string, default: { get_property: [ SELF, status_code ] } }
+              timeout:            { type: string, default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { type: boolean, default: { get_property: [ SELF, regex ] } }
             implementation:
               primary: uri/response_body.yaml
 
@@ -186,30 +186,30 @@ node_types:
         operations:
           create:
             inputs:
-              url:                { default: { get_property: [ SELF, url ] } }
-              attributes:         { default: { get_property: [ SELF, attributes ] } }
-              body:               { default: { get_property: [ SELF, body ] } }
-              body_format:        { default: { get_property: [ SELF, body_format ] } }
-              method:             { default: { get_property: [ SELF, method ] } }
-              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
-              client_key:         { default: { get_property: [ SELF, client_key ] } }
-              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
-              force:              { default: { get_property: [ SELF, force ] } }
-              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
-              group:              { default: { get_property: [ SELF, group ] } }
-              headers:            { default: { get_property: [ SELF, headers ] } }
-              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
-              mode:               { default: { get_property: [ SELF, mode ] } }
-              owner:              { default: { get_property: [ SELF, owner ] } }
-              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
-              removes:            { default: { get_property: [ SELF, removes ] } }
-              src:                { default: { get_property: [ SELF, src ] } }
-              creates:            { default: null }
-              dest:               { default: null }
-              status_code:        { default: { get_property: [ SELF, status_code ] } }
-              timeout:            { default: { get_property: [ SELF, timeout ] } }
-              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
-              regex:              { default: { get_property: [ SELF, regex ] } }
+              url:                { type: string, default: { get_property: [ SELF, url ] } }
+              attributes:         { type: string, default: { get_property: [ SELF, attributes ] } }
+              body:               { type: string, default: { get_property: [ SELF, body ] } }
+              body_format:        { type: string, default: { get_property: [ SELF, body_format ] } }
+              method:             { type: string, default: { get_property: [ SELF, method ] } }
+              client_cert:        { type: string, default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { type: string, default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { type: string, default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { type: string, default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { type: string, default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { type: string, default: { get_property: [ SELF, group ] } }
+              headers:            { type: map,    default: { get_property: [ SELF, headers ] } }
+              http_agent:         { type: string, default: { get_property: [ SELF, http_agent ] } }
+              mode:               { type: string, default: { get_property: [ SELF, mode ] } }
+              owner:              { type: string, default: { get_property: [ SELF, owner ] } }
+              remote_src:         { type: string, default: { get_property: [ SELF, remote_src ] } }
+              removes:            { type: string, default: { get_property: [ SELF, removes ] } }
+              src:                { type: string, default: { get_property: [ SELF, src ] } }
+              creates:            { type: string, default: null }
+              dest:               { type: string, default: null }
+              status_code:        { type: string, default: { get_property: [ SELF, status_code ] } }
+              timeout:            { type: string, default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { type: boolean, default: { get_property: [ SELF, regex ] } }
             implementation:
               primary: uri/download_body.yaml
 
@@ -222,30 +222,30 @@ node_types:
         operations:
           create:
             inputs:
-              url:                { default: { get_property: [ SELF, url ] } }
-              attributes:         { default: { get_property: [ SELF, attributes ] } }
-              body:               { default: { get_property: [ SELF, body ] } }
-              body_format:        { default: { get_property: [ SELF, body_format ] } }
-              method:             { default: { get_property: [ SELF, method ] } }
-              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
-              client_key:         { default: { get_property: [ SELF, client_key ] } }
-              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
-              force:              { default: { get_property: [ SELF, force ] } }
-              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
-              group:              { default: { get_property: [ SELF, group ] } }
-              headers:            { default: { get_property: [ SELF, headers ] } }
-              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
-              mode:               { default: { get_property: [ SELF, mode ] } }
-              owner:              { default: { get_property: [ SELF, owner ] } }
-              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
-              removes:            { default: { get_property: [ SELF, removes ] } }
-              src:                { default: { get_property: [ SELF, src ] } }
-              creates:            { default: null }
-              dest:               { default: null }
-              status_code:        { default: { get_property: [ SELF, status_code ] } }
-              timeout:            { default: { get_property: [ SELF, timeout ] } }
-              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
-              regex:              { default: { get_property: [ SELF, regex ] } }
+              url:                { type: string, default: { get_property: [ SELF, url ] } }
+              attributes:         { type: string, default: { get_property: [ SELF, attributes ] } }
+              body:               { type: string, default: { get_property: [ SELF, body ] } }
+              body_format:        { type: string, default: { get_property: [ SELF, body_format ] } }
+              method:             { type: string, default: { get_property: [ SELF, method ] } }
+              client_cert:        { type: string, default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { type: string, default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { type: string, default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { type: string, default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { type: string, default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { type: string, default: { get_property: [ SELF, group ] } }
+              headers:            { type: map,    default: { get_property: [ SELF, headers ] } }
+              http_agent:         { type: string, default: { get_property: [ SELF, http_agent ] } }
+              mode:               { type: string, default: { get_property: [ SELF, mode ] } }
+              owner:              { type: string, default: { get_property: [ SELF, owner ] } }
+              remote_src:         { type: string, default: { get_property: [ SELF, remote_src ] } }
+              removes:            { type: string, default: { get_property: [ SELF, removes ] } }
+              src:                { type: string, default: { get_property: [ SELF, src ] } }
+              creates:            { type: string, default: null }
+              dest:               { type: string, default: null }
+              status_code:        { type: string, default: { get_property: [ SELF, status_code ] } }
+              timeout:            { type: string, default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { type: boolean, default: { get_property: [ SELF, regex ] } }
             implementation:
               primary: uri/redirect.yaml
 
@@ -258,30 +258,30 @@ node_types:
         operations:
           create:
             inputs:
-              url:                { default: { get_property: [ SELF, url ] } }
-              attributes:         { default: { get_property: [ SELF, attributes ] } }
-              body:               { default: { get_property: [ SELF, body ] } }
-              body_format:        { default: { get_property: [ SELF, body_format ] } }
-              method:             { default: { get_property: [ SELF, method ] } }
-              client_cert:        { default: { get_property: [ SELF, client_cert ] } }
-              client_key:         { default: { get_property: [ SELF, client_key ] } }
-              follow_redirects:   { default: { get_property: [ SELF, follow_redirects ] } }
-              force:              { default: { get_property: [ SELF, force ] } }
-              force_basic_auth:   { default: { get_property: [ SELF, force_basic_auth ] } }
-              group:              { default: { get_property: [ SELF, group ] } }
-              headers:            { default: { get_property: [ SELF, headers ] } }
-              http_agent:         { default: { get_property: [ SELF, http_agent ] } }
-              mode:               { default: { get_property: [ SELF, mode ] } }
-              owner:              { default: { get_property: [ SELF, owner ] } }
-              remote_src:         { default: { get_property: [ SELF, remote_src ] } }
-              removes:            { default: { get_property: [ SELF, removes ] } }
-              src:                { default: { get_property: [ SELF, src ] } }
-              creates:            { default: null }
-              dest:               { default: null }
-              status_code:        { default: { get_property: [ SELF, status_code ] } }
-              timeout:            { default: { get_property: [ SELF, timeout ] } }
-              comparable_string:  { default: { get_property: [ SELF, comparable_string ] } }
-              regex:              { default: { get_property: [ SELF, regex ] } }
+              url:                { type: string, default: { get_property: [ SELF, url ] } }
+              attributes:         { type: string, default: { get_property: [ SELF, attributes ] } }
+              body:               { type: string, default: { get_property: [ SELF, body ] } }
+              body_format:        { type: string, default: { get_property: [ SELF, body_format ] } }
+              method:             { type: string, default: { get_property: [ SELF, method ] } }
+              client_cert:        { type: string, default: { get_property: [ SELF, client_cert ] } }
+              client_key:         { type: string, default: { get_property: [ SELF, client_key ] } }
+              follow_redirects:   { type: string, default: { get_property: [ SELF, follow_redirects ] } }
+              force:              { type: string, default: { get_property: [ SELF, force ] } }
+              force_basic_auth:   { type: string, default: { get_property: [ SELF, force_basic_auth ] } }
+              group:              { type: string, default: { get_property: [ SELF, group ] } }
+              headers:            { type: map,    default: { get_property: [ SELF, headers ] } }
+              http_agent:         { type: string, default: { get_property: [ SELF, http_agent ] } }
+              mode:               { type: string, default: { get_property: [ SELF, mode ] } }
+              owner:              { type: string, default: { get_property: [ SELF, owner ] } }
+              remote_src:         { type: string, default: { get_property: [ SELF, remote_src ] } }
+              removes:            { type: string, default: { get_property: [ SELF, removes ] } }
+              src:                { type: string, default: { get_property: [ SELF, src ] } }
+              creates:            { type: string, default: null }
+              dest:               { type: string, default: null }
+              status_code:        { type: string, default: { get_property: [ SELF, status_code ] } }
+              timeout:            { type: string, default: { get_property: [ SELF, timeout ] } }
+              comparable_string:  { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:              { type: boolean, default: { get_property: [ SELF, regex ] } }
             implementation:
               primary: uri/response_code.yaml
 
@@ -317,13 +317,13 @@ node_types:
         operations:
           create:
             inputs:
-              command:                { default: { get_property: [ SELF, command ] } }
-              dir:                    { default: { get_property: [ SELF, dir ] } }
-              executable:             { default: { get_property: [ SELF, executable ] } }
-              comparable_string:      { default: { get_property: [ SELF, comparable_string ] } }
-              regex:                  { default: { get_property: [ SELF, regex ] } }
-              compare_to:             { default: { get_property: [ SELF, compare_to ] } }
-              host_os:                { default: { get_property: [ SELF, host_os ] } }
+              command:                { type: string, default: { get_property: [ SELF, command ] } }
+              dir:                    { type: string, default: { get_property: [ SELF, dir ] } }
+              executable:             { type: string, default: { get_property: [ SELF, executable ] } }
+              comparable_string:      { type: string, default: { get_property: [ SELF, comparable_string ] } }
+              regex:                  { type: boolean, default: { get_property: [ SELF, regex ] } }
+              compare_to:             { type: string, default: { get_property: [ SELF, compare_to ] } }
+              host_os:                { type: string, default: { get_property: [ SELF, host_os ] } }
             implementation:
               primary: command/response_body.yaml
 
@@ -355,9 +355,9 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:         { default: { get_property: [ SELF, file_location ] } }
-              follow:                { default: { get_property: [ SELF, follow ] } }
-              exists:                { default: { get_property: [ SELF, exists ] } }
+              file_location:         { type: string, default: { get_property: [ SELF, file_location ] } }
+              follow:                { type: string, default: { get_property: [ SELF, follow ] } }
+              exists:                { type: boolean, default: { get_property: [ SELF, exists ] } }
             implementation:
               primary: file/exist.yaml
 
@@ -373,9 +373,9 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:        { default: { get_property: [ SELF, file_location ] } }
-              follow:               { default: { get_property: [ SELF, follow ] } }
-              mode:                 { default: { get_property: [ SELF, mode ] } }
+              file_location:        { type: string, default: { get_property: [ SELF, file_location ] } }
+              follow:               { type: string, default: { get_property: [ SELF, follow ] } }
+              mode:                 { type: string, default: { get_property: [ SELF, mode ] } }
             implementation:
               primary: file/mode.yaml
 
@@ -397,10 +397,10 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:         { default: { get_property: [ SELF, file_location ] } }
-              follow:                { default: { get_property: [ SELF, follow ] } }
-              checksum:              { default: { get_property: [ SELF, checksum ] } }
-              checksum_algorithm:    { default: { get_property: [ SELF, checksum_algorithm ] } }
+              file_location:         { type: string, default: { get_property: [ SELF, file_location ] } }
+              follow:                { type: string, default: { get_property: [ SELF, follow ] } }
+              checksum:              { type: string, default: { get_property: [ SELF, checksum ] } }
+              checksum_algorithm:    { type: string, default: { get_property: [ SELF, checksum_algorithm ] } }
             implementation:
               primary: file/checksum.yaml
 
@@ -424,11 +424,11 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:          { default: { get_property: [ SELF, file_location ] } }
-              follow:                 { default: { get_property: [ SELF, follow ] } }
-              owner:                  { default: { get_property: [ SELF, owner ] } }
-              check_group:            { default: { get_property: [ SELF, check_group ] } }
-              check_id:               { default: { get_property: [ SELF, check_id ] } }
+              file_location:          { type: string, default: { get_property: [ SELF, file_location ] } }
+              follow:                 { type: string, default: { get_property: [ SELF, follow ] } }
+              owner:                  { type: string, default: { get_property: [ SELF, owner ] } }
+              check_group:            { type: boolean, default: { get_property: [ SELF, check_group ] } }
+              check_id:               { type: boolean, default: { get_property: [ SELF, check_id ] } }
             implementation:
               primary: file/owner.yaml
 
@@ -450,10 +450,10 @@ node_types:
         operations:
           create:
             inputs:
-              file_location:          { default: { get_property: [ SELF, file_location ] } }
-              follow:                 { default: { get_property: [ SELF, follow ] } }
-              size:                   { default: { get_property: [ SELF, size ] } }
-              comparator:             { default: { get_property: [ SELF, comparator ] } }
+              file_location:          { type: string, default: { get_property: [ SELF, file_location ] } }
+              follow:                 { type: string, default: { get_property: [ SELF, follow ] } }
+              size:                   { type: integer, default: { get_property: [ SELF, size ] } }
+              comparator:             { type: string, default: { get_property: [ SELF, comparator ] } }
             implementation:
               primary: file/size.yaml
 
@@ -491,11 +491,11 @@ node_types:
         operations:
           create:
             inputs:
-              command:                { default: { get_property: [ SELF, command ] } }
-              dir:                    { default: { get_property: [ SELF, dir ] } }
-              executable:             { default: { get_property: [ SELF, executable ] } }
-              response_code:          { default: { get_property: [ SELF, response_code ] } }
-              host_os:                { default: { get_property: [ SELF, host_os ] } }
+              command:                { type: string, default: { get_property: [ SELF, command ] } }
+              dir:                    { type: string, default: { get_property: [ SELF, dir ] } }
+              executable:             { type: string, default: { get_property: [ SELF, executable ] } }
+              response_code:          { type: integer, default: { get_property: [ SELF, response_code ] } }
+              host_os:                { type: string, default: { get_property: [ SELF, host_os ] } }
             implementation:
               primary: command/response_code.yaml
 
@@ -517,11 +517,11 @@ node_types:
         operations:
           create:
             inputs:
-              command:                { default: { get_property: [ SELF, command ] } }
-              dir:                    { default: { get_property: [ SELF, dir ] } }
-              executable:             { default: { get_property: [ SELF, executable ] } }
-              time:                   { default: { get_property: [ SELF, time ] } }
-              comparator:             { default: { get_property: [ SELF, comparator ] } }
-              host_os:                { default: { get_property: [ SELF, host_os ] } }
+              command:                { type: string, default: { get_property: [ SELF, command ] } }
+              dir:                    { type: string, default: { get_property: [ SELF, dir ] } }
+              executable:             { type: string, default: { get_property: [ SELF, executable ] } }
+              time:                   { type: float, default: { get_property: [ SELF, time ] } }
+              comparator:             { type: string, default: { get_property: [ SELF, comparator ] } }
+              host_os:                { type: string, default: { get_property: [ SELF, host_os ] } }
             implementation:
               primary: command/time.yaml

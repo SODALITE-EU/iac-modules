@@ -15,16 +15,10 @@
 
   tasks:
     - set_fact:
-        alt_name: "IP:{{ cert_ipv4_address | default(public_ipv4_address) }}"
-        common_name: "{{ domain_name | default(public_ipv4_address) }}"
-        cert_filename: "{{ cert_files_prefix | default(common_name) }}"
-
-    - debug:
-        msg: {
-               "alt_name": "{{ alt_name }}",
-               "common_name": "{{ common_name }}",
-               "cert_filename":  "{{ cert_filename }}"
-        }
+        alt_name: "IP:{{ cert_ipv4_address | default(public_ipv4_address, true) }}"
+        common_name: "{{ domain_name | default(public_ipv4_address, true) }}"
+    - set_fact:
+        cert_filename: "{{ cert_files_prefix | default(common_name, true) }}"
 
     - name: Create fresh certs dir
       block:
@@ -62,25 +56,25 @@
     - name: Generate certificates and clean up
       block:
         - openssl_privatekey:
-            path: "{{ cert_path }}/{{ common_name }}.key"
+            path: "{{ cert_path }}/{{ cert_filename }}.key"
             size: 4096
         - openssl_csr:
-            path: "{{ cert_path }}/{{ common_name}}.csr"
-            privatekey_path: "{{ cert_path }}/{{ common_name}}.key"
+            path: "{{ cert_path }}/{{ cert_filename}}.csr"
+            privatekey_path: "{{ cert_path }}/{{ cert_filename}}.key"
             country_name: "{{ country_name }}"
             organization_name: "{{ organization_name }}"
             email_address:  "{{ email_address }}"
             common_name: "{{ common_name}}"
             subject_alt_name: "{{ alt_name }}"
         - openssl_certificate:
-            path: "{{ cert_path }}/{{ common_name }}.crt"
-            csr_path: "{{ cert_path }}/{{ common_name }}.csr"
+            path: "{{ cert_path }}/{{ cert_filename }}.crt"
+            csr_path: "{{ cert_path }}/{{ cert_filename }}.csr"
             ownca_path: "{{ cert_path }}/ca.crt"
             ownca_privatekey_path: "{{ cert_path }}/ca.key"
             provider: "ownca"
         - file:
             state: absent
-            path: "{{ cert_path }}/{{ common_name}}.csr"
+            path: "{{ cert_path }}/{{ cert_filename }}.csr"
         - file:
             state: absent
             path: "{{ cert_path }}/ca.key"
@@ -88,7 +82,7 @@
     - name: Set attributes
       set_stats:
         data:
-          cert_files_prefix: "{{ common_name }}"
+          cert_files_prefix: "{{ cert_filename }}"
 
   roles:
     - role: geerlingguy.pip

@@ -1,0 +1,94 @@
+---
+- hosts: all
+  become_user: root
+  become: yes
+
+  vars:
+    pip_install_packages:
+      - name: cryptography
+
+  pre_tasks:
+    - name: Set vars for Cent OS backward compatibility
+      set_fact:
+        pip_package: python-pip
+      when: ansible_distribution == "CentOS"
+
+  tasks:
+    - set_fact:
+        alt_name: "IP:{{ cert_ipv4_address | default(public_ipv4_address) }}"
+        common_name: "{{ domain_name | default(public_ipv4_address) }}"
+        cert_filename: "{{ cert_files_prefix | default(common_name) }}"
+
+    - debug:
+        msg: {
+               "alt_name": "{{ alt_name }}",
+               "common_name": "{{ common_name }}",
+               "cert_filename":  "{{ cert_filename }}"
+        }
+
+    - name: Create fresh certs dir
+      block:
+        - file:
+            path: "{{ cert_path }}"
+            state: absent
+        - file:
+            path: "{{ cert_path }}"
+            state: directory
+
+    - name: Copy root CA files
+      block:
+        - copy:
+            src: ca.crt
+            dest: "{{ cert_path }}/ca.crt"
+        - copy:
+            src: ca.key
+            dest: "{{ cert_path }}/ca.key"
+
+    - name: Install root CA
+      block:
+        - command: "cp {{ cert_path }}/ca.crt /etc/pki/ca-trust/source/anchors/ca.crt"
+        - command: update-ca-trust
+      when: ansible_distribution == "CentOS"  
+
+    - name: Install root CA
+      block:
+        - file:
+            path: "/usr/local/share/ca-certificates/opera"
+            state: directory
+        - command: "cp {{ cert_path }}/ca.crt /usr/local/share/ca-certificates/opera/ca.crt"
+        - command: update-ca-certificates
+      when: ansible_distribution == "Ubuntu"        
+
+    - name: Generate certificates and clean up
+      block:
+        - openssl_privatekey:
+            path: "{{ cert_path }}/{{ common_name }}.key"
+            size: 4096
+        - openssl_csr:
+            path: "{{ cert_path }}/{{ common_name}}.csr"
+            privatekey_path: "{{ cert_path }}/{{ common_name}}.key"
+            country_name: "{{ country_name }}"
+            organization_name: "{{ organization_name }}"
+            email_address:  "{{ email_address }}"
+            common_name: "{{ common_name}}"
+            subject_alt_name: "{{ alt_name }}"
+        - openssl_certificate:
+            path: "{{ cert_path }}/{{ common_name }}.crt"
+            csr_path: "{{ cert_path }}/{{ common_name }}.csr"
+            ownca_path: "{{ cert_path }}/ca.crt"
+            ownca_privatekey_path: "{{ cert_path }}/ca.key"
+            provider: "ownca"
+        - file:
+            state: absent
+            path: "{{ cert_path }}/{{ common_name}}.csr"
+        - file:
+            state: absent
+            path: "{{ cert_path }}/ca.key"
+
+    - name: Set attributes
+      set_stats:
+        data:
+          cert_files_prefix: "{{ common_name }}"
+
+  roles:
+    - role: geerlingguy.pip

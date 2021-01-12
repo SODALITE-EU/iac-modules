@@ -4,6 +4,7 @@ node_types:
 
   sodalite.nodes.RegistryCertificate:
     derived_from: tosca.nodes.SoftwareComponent
+    description: TLS certificates, that enable docker client to connect with Docker Registry
     properties:
       registry_ip:
         type: string
@@ -43,4 +44,69 @@ node_types:
             inputs:
               registry_ip:              { type: string, default: { get_property: [ SELF, registry_ip ] } }
             implementation:
-              primary: playbooks/remove_cert.yml 
+              primary: playbooks/remove_cert.yml
+
+  sodalite.nodes.RegistryServerCertificate:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: TLS certificates for Docker Registry server.
+    properties:
+      country_name:
+        type: string
+        description: Country name field of the certificate signing request subject.
+        required: true
+      organization_name:
+        type: string
+        description: The organizationName field of the certificate signing request subject.
+        required: true
+      email_address:
+        type: string
+        description: The emailAddress field of the certificate signing request subject.
+        required: true
+      cert_ipv4_address:
+        type: string
+        description: IP to be written to Subject Alternative Name (SAN). If missing, SAN will be set to host's public_address
+        required: false
+        default: ""
+      cert_path:
+        type: string
+        description: Path where required files are stored.
+        required: true
+      # This parameter is supposed to be here until opera enables intrinsic functions on all depths
+      cert_files_prefix:
+        type: string
+        description: Filename of certs. If missing, it will be set to common_name.
+        required: false
+        default: ""
+      domain_name:
+        type: string
+        description: Domain name of server. If missing, it will be set to IP. This will be mapped to 'Common name'.
+        required: false
+        default: ""
+    attributes:
+      cert_files_prefix:
+        type: string
+        description: Certificate filename prefix. Full cert path is [cert_path]/[cert_files_prefix].crt
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              country_name:                   { type: string, default: { get_property: [ SELF, country_name ] } }
+              organization_name:              { type: string, default: { get_property: [ SELF, organization_name ] } }
+              email_address:                  { type: string, default: { get_property: [ SELF, email_address ] } }
+              cert_ipv4_address:              { type: string, default: { get_property: [ SELF, cert_ipv4_address ] } }
+              public_ipv4_address:            { type: string, default: { get_attribute: [ SELF, host, public_address ] } }
+              cert_path:                      { type: string, default: { get_property: [ SELF, cert_path ] } }
+              cert_files_prefix:              { type: string, default: { get_property: [ SELF, cert_files_prefix ] } }
+              domain_name:                    { type: string, default: { get_property: [ SELF, domain_name ] } }
+            implementation:
+              primary: playbooks/add_registry_server_cert.yml
+              dependencies:
+                - artifacts/ca.crt
+                - artifacts/ca.key
+          delete:
+            inputs:
+              cert_path: { type: string, default: { get_attribute: [ SELF, cert_path ] } }
+            implementation:
+              primary: playbooks/remove_registry_server_cert.yml

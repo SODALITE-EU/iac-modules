@@ -1,0 +1,18 @@
+---
+- hosts: all
+  become_user: root
+  become: yes
+
+  vars:
+    pip_install_packages:
+      - name: cryptography
+        state: absent
+
+  tasks:
+    - name: Delete the path to certs
+      file:
+          path: "{{ cert_path }}"
+          state: absent
+
+  roles:
+    - geerlingguy.pip

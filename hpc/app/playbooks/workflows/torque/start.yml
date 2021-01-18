@@ -1,0 +1,33 @@
+---
+- hosts: all
+  gather_facts: yes
+  tasks:
+
+    - name: "Register workspace"
+      shell: readlink -f {{ ( workspace != None and workspace != '' ) | ternary(workspace, ansible_env.HOME) }}
+      register: workspace_dir_results
+
+    - name: "Save full path of workspace dir as attribute"
+      set_fact:
+        workspace_path: "{{ workspace_dir_results.stdout }}"
+
+    - name: Submit the job
+      shell: qsub -V {{ exec_name }}.sh
+      args:
+        chdir: "{{ workspace_path }}"
+      register: job
+      environment: "{{ env if env is defined }}"
+
+    - name: Saving job_id
+      set_fact:
+        job_id: "{{ job.stdout }}"
+
+    - name: Obtain walltime
+      shell: qstat -f {{ job_id }} | grep 'Resource_List.walltime' | egrep -o '[^ ]+$'
+      register: walltime_result
+
+    - name: Set attribute
+      set_stats:
+        data:
+          job_id: "{{ job_id }}"
+          job_walltime: "{{ walltime_result.stdout }}"

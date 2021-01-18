@@ -1,0 +1,71 @@
+---
+- hosts: all
+  gather_facts: yes
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin"
+  tasks:
+
+    - name: Pull singularity image
+      block:
+
+        - set_fact:
+            output: "{{ container_runtime.split('/')[-1].replace(':', '_') + '.sif' }}"
+
+        - set_fact:
+            image: "{{ container_runtime.split('private://')[-1] }}"
+
+        - set_fact:
+            registry: "{{ 'private' if container_runtime is search('private://') else 'public' }}"
+
+        - set_fact:
+            output_exists: "{{ output is defined and output | length > 0 }}"
+
+        - name: "Check image existence"
+          stat:
+            path: "{{ images_location }}/{{ output }}"
+          register: image_status
+          when: output_exists
+
+        - set_fact:
+            image_exists: "{{ output_exists and image_status.stat.exists == true }}"
+
+        - name: "When private repository, download using puller"
+          block:
+            - name: "Download tar image"
+              shell: >
+                DOCKER_REGISTRY={{ private_registry }} \
+                singularity run \
+                  -B {{ certs_location }}:/certs \
+                  -B {{ images_location }}:/images \
+                  {{ puller_image }} {{ output }} {{ image }}
+            - name: "Convert tar to sif"
+              shell: >
+                singularity build \
+                  {{ images_location }}/{{ output }} \
+                  docker-archive://{{ images_location }}/{{ output }}.tar.gz
+
+          when: image_exists == false and registry == 'private'
+
+        - name: "Otherwise, download normally"
+          block:
+            - name: Pulling image
+              shell: >
+                singularity pull \
+                  --dir {{ images_location }} \
+                  {{ output }} \
+                  {{ image_path }}
+              register: pull_status 
+              ignore_errors: yes
+              vars:
+                image_path: "{{ image }}"
+            
+            # ignoring only "Image file already exists" error
+            - fail:
+                msg: Error occurred while pulling
+              when: "pull_status.rc != 0 and 'Image file already exists' not in pull_status.stderr" 
+
+          when: image_exists == false and registry != 'private'
+
+      when: runtime == "singularity"
+
+    

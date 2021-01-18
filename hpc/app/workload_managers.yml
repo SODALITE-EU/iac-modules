@@ -1,0 +1,49 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+capability_types:
+
+  # shall be discovered
+  # target name shall be in-sync with MODAK db
+  sodalite.capabilities.OptimisedTarget:
+    derived_from: tosca.capabilities.Compute
+    properties:
+      target:
+        type: string
+
+  # from discovery defs
+  sodalite.capabilities.WM.JobResources:
+    derived_from: tosca.capabilities.Compute
+    properties:
+      gpus:
+        type: integer
+        required: true
+      cpus:
+        type: integer
+        required: true
+      memory:
+        type: integer
+        required: false
+
+node_types:
+
+  # from discovery defs
+  sodalite.nodes.hpc.WM: 
+    description: >
+      Here we can define properties/attributes applicable for Batch WM
+    derived_from: tosca.nodes.Compute
+    properties:
+      scheduler:
+        type: string
+        constraints:
+          - valid_values: [ torque, slurm ]
+      username:
+        type: string
+      ssh-key:
+        required: false
+        type: string
+        default: "id_rsa"
+    capabilities:
+      resources:
+        type: sodalite.capabilities.WM.JobResources
+      optimisations:
+        type: sodalite.capabilities.OptimisedTarget

@@ -1,0 +1,27 @@
+- hosts: all
+  gather_facts: yes
+  tasks:
+
+    - name: "Register workspace"
+      shell: readlink -f {{ ( workspace != None and workspace != '' ) | ternary(workspace, ansible_env.HOME) }}
+      register: workspace_dir_results
+
+    - name: "Save full path of workspace dir as attribute"
+      set_fact:
+        workspace_path: "{{ workspace_dir_results.stdout }}"
+
+    - name: "Create workspace dir"
+      file:
+        dest: "{{ workspace_path }}"
+        state: directory
+
+    - name: "Create job script"
+      copy:
+        content: "{{ content }}"
+        dest: "{{ workspace_path }}/{{ exec_name }}.sh"
+
+    - name: "Save full path of images dir in env attribute"
+      set_stats:
+        data:
+          env: "{{ env | combine( {'SINGULARITY_DIR': images_location_full_path} ) }}"
+          exec_name: "{{ exec_name }}"

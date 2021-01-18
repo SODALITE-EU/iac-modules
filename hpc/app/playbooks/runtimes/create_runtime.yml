@@ -1,0 +1,20 @@
+---
+- hosts: all
+  gather_facts: yes
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin"
+  tasks:
+    - name: Install singularity
+      block:
+
+        - name: Check whether singularity is installed
+          shell: command -v singularity >/dev/null 2>&1
+          register: is_singularity_installed
+          ignore_errors: yes
+
+        # TODO: Install singularity
+        - name: "Singularity installation"
+          shell: echo "Install singularity"
+          when: is_singularity_installed.rc != 0
+
+      when: runtime == "singularity"

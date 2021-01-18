@@ -1,0 +1,57 @@
+---
+- hosts: all
+  gather_facts: yes
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin"
+  tasks:
+    - name: Singularity runtime configuration
+      block:
+
+        - name: "Create images dir"
+          file:
+            dest: "{{ images_location }}"
+            state: directory
+
+        - name: "Register images dir"
+          shell: readlink -f {{ images_location }}
+          register: images_dir_results
+
+        - name: "Save full path of images dir as attribute"
+          set_stats:
+            data:
+              images_location_full_path: "{{ images_dir_results.stdout }}"
+
+        - name: "When private repository, configure puller"
+          block:
+            - name: "Create certs dir"
+              file:
+                dest: "{{ certs_location }}"
+                state: directory
+
+            - name: "Register certificates existence"
+              stat:
+                path: "{{ certs_location }}/{{ item }}"
+              register: stat_results
+              with_items:
+                - ca.crt
+                - client.cert
+                - client.key
+            
+            - name: "Check certificates existence"
+              fail:
+                msg: "{{ item.item }}"
+              with_items: "{{ stat_results.results }}"
+              when: item.stat.exists == False
+
+            - name: "Check puller image existence"
+              stat:
+                path: "{{ puller_image }}"
+              register: image_status
+
+            - name: "Download puller"
+              shell: singularity pull {{ puller_image }} docker://{{ puller_image_remote }}
+              when: image_status.stat.exists == false
+              
+          when: certs_location != ""
+
+      when: runtime == "singularity"

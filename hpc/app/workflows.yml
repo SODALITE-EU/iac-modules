@@ -40,9 +40,9 @@ node_types:
             implementation: 
               primary: playbooks/workflows/start.yml
               dependencies: 
-                - playbooks/workflows/batch
-                - playbooks/workflows/slurm
-                - playbooks/workflows/torque
+                - playbooks/workflows/batch/start_batch.yml
+                - playbooks/workflows/slurm/start_slurm.yml
+                - playbooks/workflows/torque/start_torque.yml
 
   sodalite.nodes.workflow.Result: 
     derived_from: tosca.nodes.SoftwareComponent
@@ -78,6 +78,6 @@ node_types:
             implementation: 
               primary: playbooks/workflows/check.yml
               dependencies: 
-                - playbooks/workflows/batch
-                - playbooks/workflows/slurm
-                - playbooks/workflows/torque
+                - playbooks/workflows/batch/check_batch.yml
+                - playbooks/workflows/slurm/check_slurm.yml
+                - playbooks/workflows/torque/check_torque.yml

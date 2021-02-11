@@ -40,7 +40,14 @@ node_types:
       aws_secret_key:
         description: The AWS secret key.
         required: False 
-        type: string           
+        type: string   
+      scheduler:
+        description: Scheduler type for batch execution
+        type: string
+        default: "batch"
+        required: false 
+        constraints:
+          - valid_values: [ "batch" ]        
     attributes:  
       id:  
         description: OpenStack id of the VM 

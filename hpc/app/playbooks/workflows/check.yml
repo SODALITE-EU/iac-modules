@@ -7,7 +7,6 @@
   import_playbook: check_slurm.yml
   when: scheduler == "slurm"
 
-# # TODO: playbook for batch
-# - name: Check job in any compute
-#   import_playbook: check_batch.yml
-#   when: scheduler == "batch"
+- name: Check job in any compute
+  import_playbook: check_batch.yml
+  when: scheduler == "batch"

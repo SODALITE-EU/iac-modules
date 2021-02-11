@@ -12,9 +12,65 @@
           register: is_singularity_installed
           ignore_errors: yes
 
-        # TODO: Install singularity
+        - name: Install missing dependences in Debian distribution
+          apt: pkg={{ item }} state=present
+          with_items:
+            - build-essential
+            - libssl-dev
+            - uuid-dev
+            - libgpgme-dev
+            - squashfs-tools
+            - libseccomp-dev
+            - wget
+            - pkg-config
+            - git
+            - cryptsetup-bin
+            - vim
+            - gcc
+            - g++
+          become: yes
+          when: is_singularity_installed.rc != 0 and ansible_os_family == "Debian"
+
+        - name: Install missing dependences in RedHat distribution
+          yum: pkg={{ item }} state=present
+          with_items:
+            - "@Development Tools" 
+            - openssl-devel
+            - libuuid-devel
+            - libseccomp-devel
+            - gcc-c++.x86_64
+            - wget
+            - squashfs-tools
+            - cryptsetup-luks
+            - vim
+          become: yes
+          when: is_singularity_installed.rc != 0 and ansible_os_family == "RedHat"
+
         - name: "Singularity installation"
-          shell: echo "Install singularity"
+          shell: |
+            export VERSION=1.13 OS=linux ARCH=amd64 && \
+            wget https://dl.google.com/go/go$VERSION.$OS-$ARCH.tar.gz && \
+            sudo tar -C /usr/local -xzvf go$VERSION.$OS-$ARCH.tar.gz && \
+            rm -f go$VERSION.$OS-$ARCH.tar.gz
+
+            echo 'export GOPATH=${HOME}/go' >> ~/.bashrc && \
+            echo 'export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin' >> ~/.bashrc
+
+            export VERSION=3.5.2 && \
+            wget https://github.com/sylabs/singularity/releases/download/v${VERSION}/singularity-${VERSION}.tar.gz && \
+            tar -xzf singularity-${VERSION}.tar.gz && \
+            cd singularity
+
+            export GOPATH=${HOME}/go && \
+            export PATH=/usr/local/go/bin:${PATH}:${GOPATH}/bin && \
+            ./mconfig && \
+            make -C ./builddir && \
+            sudo make -C ./builddir install && \
+            cd .. && \
+            rm -f singularity-${VERSION}.tar.gz
+          become: no
+          args:
+            executable: /bin/bash
           when: is_singularity_installed.rc != 0
 
       when: runtime == "singularity"

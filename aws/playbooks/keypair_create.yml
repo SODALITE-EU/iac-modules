@@ -1,0 +1,14 @@
+---
+- hosts: all
+  gather_facts: no
+  
+  tasks:
+
+    - name: Create keypair
+      ec2_key:  
+        name: "{{ name }}"
+        key_material: "{{ public_key }}"
+        region: "{{ region }}"
+        aws_access_key: "{{ aws_access_key }}"
+        aws_secret_key: "{{ aws_secret_key }}"
+        state: present

@@ -6,14 +6,11 @@ imports:
 
 node_types:
 
-  # TODO: need basic sodalite.nodes.workflow.Element for BatchExecution
-  #       on any compute node: WM and VM
-
   sodalite.nodes.workflow.Job: 
     derived_from: tosca.nodes.SoftwareComponent
     requirements:
       - host:
-          node: sodalite.nodes.hpc.WM
+          node: tosca.nodes.Compute
           capability: tosca.capabilities.Compute
           relationship: tosca.relationships.HostedOn
       - execution:
@@ -32,7 +29,7 @@ node_types:
           start:
             inputs:
               ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
-              ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
+              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
               scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
               exec_name: { type: string, default: { get_attribute: [SELF, execution, exec_name] } }
               workspace: { type: string, default: { get_property: [SELF, execution, workspace] } }
@@ -48,7 +45,7 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     requirements:
       - host:
-          node: sodalite.nodes.hpc.WM
+          node: tosca.nodes.Compute
           capability: tosca.capabilities.Compute
           relationship: tosca.relationships.HostedOn
       - job:
@@ -69,7 +66,7 @@ node_types:
           start:
             inputs:
               ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
-              ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
+              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
               scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
               job_monitor_period: { type: integer, default: { get_property: [SELF, monitor_period] } }
               job_monitor_retries_headroom: { type: integer, default: { get_property: [SELF, monitor_retries_headroom] } }

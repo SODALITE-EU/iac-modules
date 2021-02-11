@@ -24,7 +24,7 @@
 
     # TODO: obtain walltime from scontrol
     - name: Obtain walltime
-      shell: echo 24:00:00 # scontrol show job -dd {{ job_id }} | grep -o 'TimeLimit='
+      shell: echo 23:00:00 # scontrol show job -dd {{ job_id }} | grep -o 'TimeLimit='
       register: walltime_result
 
     - name: Set attribute

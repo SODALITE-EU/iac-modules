@@ -1,0 +1,128 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - kubernetes_definitions.yaml
+
+data_types:
+  sodalite.datatypes.Kubernetes.Kind:
+    derived_from: tosca.datatypes.Root
+
+node_types:
+
+  sodalite.nodes.Kubernetes.Cluster:
+    derived_from: tosca.nodes.Compute
+    capabilities:
+      host:
+        type: tosca.capabilities.Compute
+        valid_source_types: [ sodalite.nodes.Kubernetes.Kind, sodalite.nodes.Kubernetes.Definition ]
+    properties:
+      kubeconfig:
+        type: string
+        default: ~/.kube/config
+        description: Path to kubeconfig file
+
+  sodalite.nodes.Kubernetes.Definition:
+    derived_from: tosca.nodes.SoftwareComponent
+
+  sodalite.nodes.Kubernetes.Definition.Helm:
+    derived_from: sodalite.nodes.Kubernetes.Definition
+    properties:
+      name:
+        type: string
+        description: Name of a release
+      namespace:
+        type: string
+        default: default
+        description: Kubernetes namespace of a release
+      chart:
+        type: string
+        description: Helm chart name in a form of path, e.g. stable/mysql. Direct URL path to the chart is also possible
+      chart_version:
+        type: string
+        default: latest
+        description: Helm chart version
+      repo_name:
+        type: string
+        default: ""
+        description: Name of a Helm charts repository. Empty value means that the repo will not be added and chart relies on the repositories preinstalled on the target host
+      repo_url:
+        type: string
+        default: ""
+        description: URL to a Helm charts repository. Path to Git (*.git) is allowed - will clone repo to /tmp/helm_repo/$repo_name. Empty value means that the repo will not be added and chart relies on the repositories preinstalled on the target host
+      keep_repo:
+        type: boolean
+        default: true
+        description: Check whether to delete repo when undeploying
+      values_files:
+        type: list
+        entry_schema:
+          type: string
+        default: []
+        description: List of values files for Helm chart. Shall be as a list of artifact paths
+      values:
+        type: map
+        default: {}
+        description: Values for Helm chart. Overrites values from values_files 
+    requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          node: sodalite.nodes.Kubernetes.Cluster
+          relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
+              helm_name: { type: string, default: { get_property: [ SELF, name ] } }
+              helm_namespace: { type: string, default: { get_property: [ SELF, namespace ] } }
+              helm_chart: { type: string, default: { get_property: [ SELF, chart ] } }
+              helm_chart_version: { type: string, default: { get_property: [ SELF, chart_version ] } }
+              helm_repo_name: { type: string, default: { get_property: [ SELF, repo_name ] } }
+              helm_repo_url: { type: string, default: { get_property: [ SELF, repo_url ] } }
+              helm_values_files: { type: list, default: { get_property: [ SELF, values_files ] } }
+              helm_values: { type: map, default: { get_property: [ SELF, values ] } }
+            implementation:
+              primary: playbooks/create_from_helm.yaml
+          delete:
+            inputs:
+              kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
+              helm_name: { type: string, default: { get_property: [ SELF, name ] } }
+              helm_namespace: { type: string, default: { get_property: [ SELF, namespace ] } }
+              helm_repo_name: { type: string, default: { get_property: [ SELF, repo_name ] } }
+              helm_repo_url: { type: string, default: { get_property: [ SELF, repo_url ] } }
+              helm_keep_repo: { type: boolean, default: { get_property: [ SELF, keep_repo ] } }
+            implementation:
+              primary: playbooks/delete_from_helm.yaml
+
+  sodalite.nodes.Kubernetes.Definition.File:
+    derived_from: sodalite.nodes.Kubernetes.Definition
+    properties:
+      path:
+        type: string
+        description: Path to Kubernetes definition file (YAML). Shall be as an artifact path
+    requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          node: sodalite.nodes.Kubernetes.Cluster
+          relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
+              path: { type: string, default: { get_property: [ SELF, path ] } }
+            implementation:
+              primary: playbooks/create_from_def_file.yaml
+          delete:
+            inputs:
+              kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
+              path: { type: string, default: { get_property: [ SELF, path ] } }
+            implementation:
+              primary: playbooks/delete_from_def_file.yaml
+
+  sodalite.nodes.Kubernetes.Kind:
+    derived_from: tosca.nodes.SoftwareComponent

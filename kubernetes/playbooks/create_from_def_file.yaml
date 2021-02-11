@@ -1,0 +1,8 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: "Create from Kubernetes definition file"
+      community.kubernetes.k8s:
+        state: present
+        kubeconfig: "{{ kubeconfig }}"
+        src: "{{ path }}"

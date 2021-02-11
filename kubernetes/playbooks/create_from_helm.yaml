@@ -1,0 +1,46 @@
+- hosts: all
+  gather_facts: no
+  vars:
+    tmp_helm_repo: "{{ '/tmp/helm_repo/' + helm_repo_name }}"
+    chart_from_git: "{{ helm_repo_url[-4:] == '.git' }}"
+    defined_helm_repo: "{{ helm_repo_url != '' and helm_repo_name != '' }}"
+    actual_helm_chart: "{{ tmp_helm_repo + '/' + helm_chart if chart_from_git else helm_chart }}"
+  tasks:
+
+    - name: Check if helm is installed
+      shell: command -v helm >/dev/null 2>&1
+      register: helm_check_output
+      ignore_errors: yes
+
+    - name: Retrieve return code from command -v
+      set_fact:
+        helm_exists: "{{ helm_check_output.rc == 0 }}"
+
+    - name: Fail if Helm is not installed on target host
+      fail:
+        msg: Helm must be installed
+      when: not helm_exists
+
+    - name: Git clone repo
+      ansible.builtin.git:
+        repo: "{{ helm_repo_url }}"
+        dest: "{{ tmp_helm_repo }}"
+      when: chart_from_git
+
+    - name: Add stable chart repo
+      community.kubernetes.helm_repository:
+        name: "{{ helm_repo_name }}"
+        state: present
+        repo_url: "{{ helm_repo_url }}"
+      when: not chart_from_git and defined_helm_repo
+
+    - name: Install chart
+      community.kubernetes.helm:
+        state: present
+        kubeconfig: "{{ kubeconfig }}"
+        name: "{{ helm_name }}"
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ actual_helm_chart }}"
+        chart_version: "{{ helm_chart_version if helm_chart_version is defined and helm_chart_version != 'latest' }}"
+        values_files: "{{ helm_values_files }}"
+        values: "{{ helm_values }}"

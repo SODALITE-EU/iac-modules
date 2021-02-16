@@ -6,12 +6,13 @@
   vars:
     pip_install_packages:
       - name: cryptography
+        version: "3.3"
 
   pre_tasks:
     - name: Set vars for Cent OS backward compatibility
       set_fact:
         pip_package: python-pip
-      when: ansible_distribution == "CentOS"
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
   tasks:
     - set_fact:
@@ -42,7 +43,7 @@
       block:
         - command: "cp {{ cert_path }}/ca.crt /etc/pki/ca-trust/source/anchors/ca.crt"
         - command: update-ca-trust
-      when: ansible_distribution == "CentOS"  
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
     - name: Install root CA
       block:

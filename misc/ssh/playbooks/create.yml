@@ -5,6 +5,7 @@
   vars:
     pip_install_packages:
       - name: cryptography
+        version: "3.3"
       - name: pyOpenSSL
 
   tasks:

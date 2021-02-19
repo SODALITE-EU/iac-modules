@@ -1,0 +1,32 @@
+---
+- hosts: all
+  gather_facts: yes
+  vars:
+    job_wait_time: "{{ 23 * 60 * 60 }}" # 23 hours
+  tasks:
+    - name: "Register workspace"
+      shell: readlink -f {{ ( workspace != None and workspace != '' ) | ternary(workspace, ansible_env.HOME) }}
+      register: workspace_dir_results
+
+    - name: "Save full path of workspace dir as attribute"
+      set_fact:
+        workspace_path: "{{ workspace_dir_results.stdout }}"
+
+    - name: Start the batch script
+      shell: bash {{ exec_name }}.sh
+      args:
+        chdir: "{{ workspace_path }}"
+      environment: "{{ env if env is defined }}"
+      register: job_monitor
+      async: "{{ job_wait_time | int }}"
+      poll: 0
+
+    - name: Saving job_id
+      set_fact:
+        job_id: "{{ job_monitor.ansible_job_id }}"
+
+    - name: Set attribute
+      set_stats:
+        data:
+          job_id: "{{ job_id }}"
+          job_walltime: "23:00:00" # 23 hours

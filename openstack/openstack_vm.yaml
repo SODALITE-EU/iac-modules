@@ -55,6 +55,13 @@ node_types:
         type: string
         default: ""
         required: false 
+      scheduler:
+        description: Scheduler type for batch execution
+        type: string
+        default: "batch"
+        required: false 
+        constraints:
+          - valid_values: [ "batch" ]
       env:
         description: Optional OpenStack environment
         type: map

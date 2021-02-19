@@ -1,0 +1,12 @@
+---
+- name: Check job in torque
+  import_playbook: check_torque.yml
+  when: scheduler == "torque"
+
+- name: Check job in slurm
+  import_playbook: check_slurm.yml
+  when: scheduler == "slurm"
+
+- name: Check job in any compute
+  import_playbook: check_batch.yml
+  when: scheduler == "batch"

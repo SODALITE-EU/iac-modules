@@ -1,0 +1,80 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - apps.yml
+  - workload_managers.yml
+
+node_types:
+
+  sodalite.nodes.workflow.Job: 
+    derived_from: tosca.nodes.SoftwareComponent
+    requirements:
+      - host:
+          node: tosca.nodes.Compute
+          capability: tosca.capabilities.Compute
+          relationship: tosca.relationships.HostedOn
+      - execution:
+          node: sodalite.nodes.batch.Container.JobExecution
+          capability: tosca.capabilities.Node
+          relationship: tosca.relationships.DependsOn
+    attributes:
+      job_id:
+        type: string
+      job_walltime:
+        type: string
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:  
+          start:
+            inputs:
+              ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
+              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
+              scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
+              exec_name: { type: string, default: { get_attribute: [SELF, execution, exec_name] } }
+              workspace: { type: string, default: { get_property: [SELF, execution, workspace] } }
+              env: { type: map, default: { get_attribute: [SELF, execution, env] } }
+            implementation: 
+              primary: playbooks/workflows/start.yml
+              dependencies: 
+                - playbooks/workflows/batch/start_batch.yml
+                - playbooks/workflows/slurm/start_slurm.yml
+                - playbooks/workflows/torque/start_torque.yml
+
+  sodalite.nodes.workflow.Result: 
+    derived_from: tosca.nodes.SoftwareComponent
+    requirements:
+      - host:
+          node: tosca.nodes.Compute
+          capability: tosca.capabilities.Compute
+          relationship: tosca.relationships.HostedOn
+      - job:
+          node: sodalite.nodes.workflow.Job
+          capability: tosca.capabilities.Node
+          relationship: tosca.relationships.DependsOn
+    properties:
+      monitor_period:
+        type: integer
+        default: 10
+      monitor_retries_headroom:
+        type: integer
+        default: 2
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:  
+          start:
+            inputs:
+              ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
+              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
+              scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
+              job_monitor_period: { type: integer, default: { get_property: [SELF, monitor_period] } }
+              job_monitor_retries_headroom: { type: integer, default: { get_property: [SELF, monitor_retries_headroom] } }
+              job_id: { type: string, default: { get_attribute: [SELF, job, job_id] } }
+              job_walltime: { type: string, default: { get_attribute: [SELF, job, job_walltime] } }
+            implementation: 
+              primary: playbooks/workflows/check.yml
+              dependencies: 
+                - playbooks/workflows/batch/check_batch.yml
+                - playbooks/workflows/slurm/check_slurm.yml
+                - playbooks/workflows/torque/check_torque.yml

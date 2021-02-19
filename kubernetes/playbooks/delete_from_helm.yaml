@@ -1,0 +1,43 @@
+- hosts: all
+  gather_facts: no
+  vars:
+    tmp_helm_repo: "{{ '/tmp/helm_repo/' + helm_repo_name }}"
+    chart_from_git: "{{ helm_repo_url[-4:] == '.git' }}"
+    defined_helm_repo: "{{ helm_repo_url != '' and helm_repo_name != '' }}"
+    actual_helm_chart: "{{ tmp_helm_repo + '/' + helm_chart if chart_from_git else helm_chart }}"
+  tasks:
+
+    - name: Check if helm is installed
+      shell: command -v helm >/dev/null 2>&1
+      register: helm_check_output
+      ignore_errors: yes
+
+    - name: Retrieve return code from command -v
+      set_fact:
+        helm_exists: "{{ helm_check_output.rc == 0 }}"
+
+    - name: Fail if Helm is not installed on target host
+      fail:
+        msg: Helm must be installed
+      when: not helm_exists
+
+    - name: Remove stable/mysql chart
+      community.kubernetes.helm:
+        state: absent
+        name: "{{ helm_name }}"
+        namespace: "{{ helm_namespace }}"
+
+    - name: Remove repo
+      block:
+      - name: Remove stable chart repo
+        community.kubernetes.helm_repository:
+          name: "{{ helm_repo_name }}"
+          state: absent
+        when: not chart_from_git
+
+      - name: Remove tmp chart repo
+        file:
+          path: "{{ tmp_helm_repo }}"
+          state: absent
+        when: chart_from_git
+      when: not helm_keep_repo

@@ -1,0 +1,8 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: "Delete from Kubernetes definition file"
+      community.kubernetes.k8s:
+        state: absent
+        kubeconfig: "{{ kubeconfig }}"
+        src: "{{ path }}"

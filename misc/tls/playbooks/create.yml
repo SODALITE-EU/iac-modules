@@ -4,15 +4,20 @@
   become: yes
 
   vars:
+    centos7: "{{ ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7' }}"
     pip_install_packages:
+      - name: pip
+        state: latest
       - name: cryptography
-        version: "3.3"
 
   pre_tasks:
     - name: Set vars for Cent OS backward compatibility
       set_fact:
         pip_package: python-pip
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+        pip_install_packages:
+          - name: cryptography
+            version: "3.3"
+      when: centos7
 
   tasks:
     - set_fact:
@@ -93,4 +98,6 @@
           cert_files_prefix: "{{ common_name}}"
 
   roles:
+    - role: geerlingguy.repo-epel
+      when: ansible_distribution == "CentOS"
     - role: geerlingguy.pip

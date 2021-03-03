@@ -6,6 +6,8 @@
   vars:
     centos7: "{{ ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7' }}"
     pip_install_packages:
+      - name: pip
+        state: latest
       - name: cryptography
 
   pre_tasks:
@@ -89,4 +91,6 @@
           cert_files_prefix: "{{ cert_filename }}"
 
   roles:
+    - role: geerlingguy.repo-epel
+      when: ansible_distribution == "CentOS"
     - role: geerlingguy.pip

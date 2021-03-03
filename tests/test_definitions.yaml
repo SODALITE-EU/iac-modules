@@ -10,6 +10,9 @@ node_types:
       checked_against:
         type: string
         description: Serves as a return value of the data that the test is testing
+      response_status:
+        type: string
+        description: Failed result in case of test failing
 
   sodalite.nodes.Tests.Text:
     derived_from: sodalite.nodes.Tests

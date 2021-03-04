@@ -101,6 +101,10 @@ node_types:
         description: IP address of dockerized component
         type: string            
     requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          node: tosca.nodes.SoftwareComponent
+          relationship: tosca.relationships.HostedOn
       - network:
           capability: tosca.capabilities.Network
           node: sodalite.nodes.DockerNetwork
@@ -111,6 +115,7 @@ node_types:
           node: sodalite.nodes.DockerRegistry
           relationship: tosca.relationships.DependsOn
           occurrences: [ 1, 1 ]
+          
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard

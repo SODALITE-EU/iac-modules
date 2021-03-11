@@ -20,6 +20,11 @@ node_types:
         type: string
         default: ~/.kube/config
         description: Path to kubeconfig file
+      username:
+        type: string
+        default: centos
+        required: false
+        description: User for remote cluster access
 
   sodalite.nodes.Kubernetes.Definition:
     derived_from: tosca.nodes.SoftwareComponent
@@ -74,6 +79,7 @@ node_types:
         operations:
           create:
             inputs:
+              ansible_user: { type: string, default: { get_property: [ SELF, host, username ] } }
               kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
               helm_name: { type: string, default: { get_property: [ SELF, name ] } }
               helm_namespace: { type: string, default: { get_property: [ SELF, namespace ] } }
@@ -87,6 +93,7 @@ node_types:
               primary: playbooks/create_from_helm.yaml
           delete:
             inputs:
+              ansible_user: { type: string, default: { get_property: [ SELF, host, username ] } }
               kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
               helm_name: { type: string, default: { get_property: [ SELF, name ] } }
               helm_namespace: { type: string, default: { get_property: [ SELF, namespace ] } }

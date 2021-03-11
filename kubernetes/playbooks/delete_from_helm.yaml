@@ -5,6 +5,7 @@
     chart_from_git: "{{ helm_repo_url[-4:] == '.git' }}"
     defined_helm_repo: "{{ helm_repo_url != '' and helm_repo_name != '' }}"
     actual_helm_chart: "{{ tmp_helm_repo + '/' + helm_chart if chart_from_git else helm_chart }}"
+    ansible_python_interpreter: "/usr/bin/env python3"
   tasks:
 
     - name: Check if helm is installed
@@ -21,11 +22,13 @@
         msg: Helm must be installed
       when: not helm_exists
 
-    - name: Remove stable/mysql chart
+    - name: Remove chart
       community.kubernetes.helm:
         state: absent
         name: "{{ helm_name }}"
         namespace: "{{ helm_namespace }}"
+      environment:
+        K8S_AUTH_KUBECONFIG: "{{ kubeconfig }}"
 
     - name: Remove repo
       block:

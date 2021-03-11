@@ -5,6 +5,7 @@
     chart_from_git: "{{ helm_repo_url[-4:] == '.git' }}"
     defined_helm_repo: "{{ helm_repo_url != '' and helm_repo_name != '' }}"
     actual_helm_chart: "{{ tmp_helm_repo + '/' + helm_chart if chart_from_git else helm_chart }}"
+    ansible_python_interpreter: "/usr/bin/env python3"
   tasks:
 
     - name: Check if helm is installed
@@ -37,10 +38,11 @@
     - name: Install chart
       community.kubernetes.helm:
         state: present
-        kubeconfig: "{{ kubeconfig }}"
         name: "{{ helm_name }}"
         namespace: "{{ helm_namespace }}"
         chart_ref: "{{ actual_helm_chart }}"
         chart_version: "{{ helm_chart_version if helm_chart_version is defined and helm_chart_version != 'latest' }}"
         values_files: "{{ helm_values_files }}"
         values: "{{ helm_values }}"
+      environment:
+        K8S_AUTH_KUBECONFIG: "{{ kubeconfig }}"

@@ -10,6 +10,9 @@
     - set_fact:
         os_env: "{{ env.os_env }}"
       when: env.os_env is defined  
+
+    - name: Deregister node-exporter in Consul server
+      shell: curl --request PUT http://{{ consul_server_address|quote }}:8500/v1/agent/service/deregister/{{ id }}-node-exporter
       
     - name: Delete VM
       os_server:

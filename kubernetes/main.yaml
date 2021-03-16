@@ -182,7 +182,7 @@ node_types:
               helm_repo_url: { type: string, default: { get_property: [ SELF, repo_url ] } }
               helm_values_files: { type: list, default: { get_property: [ SELF, values_files ] } }
               helm_values: { type: map, default: { get_property: [ SELF, values ] } }
-              node_hostname: { type: map, default: { get_property: [ SELF, kube_node, name ] } }
+              node_hostname: { type: string, default: { get_property: [ SELF, kube_node, name ] } }
               gpu_selector: { type: map, default: { get_property: [ SELF, kube_node, gpu_selector ] } }
               edgetpu_selector: { type: map, default: { get_property: [ SELF, kube_node, edgetpu_selector ] } }
               cpus: { type: integer, default: { get_property: [ SELF, kube_node, cpus ] } }

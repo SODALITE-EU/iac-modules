@@ -1,0 +1,103 @@
+- hosts: all
+  gather_facts: no
+  vars:
+    tmp_helm_repo: "{{ '/tmp/helm_repo/' + helm_repo_name }}"
+    chart_from_git: "{{ helm_repo_url[-4:] == '.git' }}"
+    defined_helm_repo: "{{ helm_repo_url != '' and helm_repo_name != '' }}"
+    actual_helm_chart: "{{ tmp_helm_repo + '/' + helm_chart if chart_from_git else helm_chart }}"
+    ansible_python_interpreter: "/usr/bin/env python3"
+
+    hostname_node_affinity_spec:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: "kubernetes.io/hostname"
+              operator: In
+              values:
+              - "{{ node_hostname }}"
+
+    cpu_node_affinity_spec:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: "accelerators/gpu"
+              operator: DoesNotExist
+            - key: "accelerators/edgetpu"
+              operator: DoesNotExist
+            - key: "accelerators/ncs2"
+              operator: DoesNotExist
+
+    gpu_node_affinity_spec:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: "{{ gpu_selector.key if gpu_selector.key is defined else 'accelerators/gpu' }}"
+              operator: In
+              values:
+              - "{{ gpu_selector.value if gpu_selector.value is defined else 'true' }}"
+
+    edgetpu_node_affinity_spec:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: "{{ edgetpu_selector.key if edgetpu_selector.key is defined else 'accelerators/edgetpu' }}"
+              operator: In
+              values:
+              - "{{ edgetpu_selector.value if edgetpu_selector.value is defined else 'true' }}"
+      
+    accelerator_exists: "{{ gpus > 0 or edgetpus > 0 }}"
+    accelerator_node_affinity: "{{ edgetpu_node_affinity_spec if edgetpus > 0 else (gpu_node_affinity_spec if gpus > 0 else {}) }}"
+    node_affinity: "{{ accelerator_node_affinity if accelerator_exists else cpu_node_affinity_spec }}"
+    # node_affinity: "{{ hostname_node_affinity_spec }}"
+
+  tasks:
+
+    - name: "Check the node is in ready state"
+      fail:
+        msg: Node must be in ready state
+      when: not ready_status
+
+    - name: Check if helm is installed
+      shell: command -v helm >/dev/null 2>&1
+      register: helm_check_output
+      ignore_errors: yes
+
+    - name: Retrieve return code from command -v
+      set_fact:
+        helm_exists: "{{ helm_check_output.rc == 0 }}"
+
+    - name: Fail if Helm is not installed on target host
+      fail:
+        msg: Helm must be installed
+      when: not helm_exists
+
+    - name: Git clone repo
+      ansible.builtin.git:
+        repo: "{{ helm_repo_url }}"
+        dest: "{{ tmp_helm_repo }}"
+      when: chart_from_git
+
+    - name: Add stable chart repo
+      community.kubernetes.helm_repository:
+        name: "{{ helm_repo_name }}"
+        state: present
+        repo_url: "{{ helm_repo_url }}"
+      when: not chart_from_git and defined_helm_repo
+
+    - name: Install chart
+      community.kubernetes.helm:
+        state: present
+        name: "{{ helm_name }}"
+        namespace: "{{ helm_namespace }}"
+        chart_ref: "{{ actual_helm_chart }}"
+        chart_version: "{{ helm_chart_version if helm_chart_version is defined and helm_chart_version != 'latest' }}"
+        values_files: "{{ helm_values_files }}"
+        values: "{{ actual_helm_values }}"
+      environment:
+        K8S_AUTH_KUBECONFIG: "{{ kubeconfig }}"
+      vars:
+        actual_helm_values: "{{ helm_values | combine( { 'affinity': node_affinity } ) }}"

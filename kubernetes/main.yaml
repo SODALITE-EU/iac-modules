@@ -26,6 +26,58 @@ node_types:
         required: false
         description: User for remote cluster access
 
+  sodalite.nodes.Kubernetes.Node:  
+    derived_from: tosca.nodes.Compute
+    capabilities:
+      host:
+        type: tosca.capabilities.Compute
+        valid_source_types: [ sodalite.nodes.Kubernetes.Kind, sodalite.nodes.Kubernetes.Definition ]
+    properties:  
+      name:  
+        description: Name of the node
+        required: True 
+        type: string 
+      annotations:  
+        required: False 
+        type: map
+        default: {}
+      labels:  
+        required: False 
+        type: map
+        default: {}
+      gpu_selector:
+        description: 'Selector for GPU node affinity. Format { "key": "label_name", "value": "label_value" }'
+        type: map
+        default: { "key": "accelerators/gpu", "value": "true" }
+      edgetpu_selector:
+        description: 'Selector for EdgeTPU node affinity. Format { "key": "label_name", "value": "label_value" }'
+        type: map
+        default: { "key": "accelerators/edgetpu", "value": "true" }
+      cpus:  
+        required: False 
+        type: integer
+        default: 0
+      gpus:  
+        required: False 
+        type: integer
+        default: 0
+      edgetpus:  
+        required: False 
+        type: integer
+        default: 0
+      arm64_cpus:  
+        required: False 
+        type: integer
+        default: 0
+      amd64_cpus:  
+        required: False 
+        type: integer
+        default: 0
+      ready_status:
+        type: boolean
+        default: False
+        description: Node is ready for deployment
+
   sodalite.nodes.Kubernetes.Definition:
     derived_from: tosca.nodes.SoftwareComponent
 
@@ -102,6 +154,45 @@ node_types:
               helm_keep_repo: { type: boolean, default: { get_property: [ SELF, keep_repo ] } }
             implementation:
               primary: playbooks/delete_from_helm.yaml
+
+  sodalite.nodes.Kubernetes.Definition.Helm.Node:
+    derived_from: sodalite.nodes.Kubernetes.Definition.Helm
+    requirements:
+      - host:
+          capability: tosca.capabilities.Compute
+          node: sodalite.nodes.Kubernetes.Cluster
+          relationship: tosca.relationships.HostedOn
+      - kube_node:
+          capability: tosca.capabilities.Compute
+          node: sodalite.nodes.Kubernetes.Node
+          relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              ansible_user: { type: string, default: { get_property: [ SELF, host, username ] } }
+              kubeconfig: { type: string, default: { get_property: [ SELF, host, kubeconfig ] } }
+              helm_name: { type: string, default: { get_property: [ SELF, name ] } }
+              helm_namespace: { type: string, default: { get_property: [ SELF, namespace ] } }
+              helm_chart: { type: string, default: { get_property: [ SELF, chart ] } }
+              helm_chart_version: { type: string, default: { get_property: [ SELF, chart_version ] } }
+              helm_repo_name: { type: string, default: { get_property: [ SELF, repo_name ] } }
+              helm_repo_url: { type: string, default: { get_property: [ SELF, repo_url ] } }
+              helm_values_files: { type: list, default: { get_property: [ SELF, values_files ] } }
+              helm_values: { type: map, default: { get_property: [ SELF, values ] } }
+              node_hostname: { type: map, default: { get_property: [ SELF, kube_node, name ] } }
+              gpu_selector: { type: map, default: { get_property: [ SELF, kube_node, gpu_selector ] } }
+              edgetpu_selector: { type: map, default: { get_property: [ SELF, kube_node, edgetpu_selector ] } }
+              cpus: { type: integer, default: { get_property: [ SELF, kube_node, cpus ] } }
+              gpus: { type: integer, default: { get_property: [ SELF, kube_node, gpus ] } }
+              edgetpus: { type: integer, default: { get_property: [ SELF, kube_node, edgetpus ] } }
+              arm64_cpus: { type: integer, default: { get_property: [ SELF, kube_node, arm64_cpus ] } }
+              amd64_cpus: { type: integer, default: { get_property: [ SELF, kube_node, amd64_cpus ] } }
+              ready_status: { type: integer, default: { get_property: [ SELF, kube_node, ready_status ] } }
+            implementation:
+              primary: playbooks/create_from_helm_with_node_affinity.yaml
 
   sodalite.nodes.Kubernetes.Definition.File:
     derived_from: sodalite.nodes.Kubernetes.Definition

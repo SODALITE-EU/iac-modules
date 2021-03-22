@@ -14,7 +14,7 @@ node_types:
           capability: tosca.capabilities.Compute
           relationship: tosca.relationships.HostedOn
       - execution:
-          node: sodalite.nodes.batch.Container.JobExecution
+          node: sodalite.nodes.batch.Container.BatchExecution
           capability: tosca.capabilities.Node
           relationship: tosca.relationships.DependsOn
     attributes:

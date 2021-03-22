@@ -20,8 +20,12 @@
         content: "{{ content }}"
         dest: "{{ workspace_path }}/{{ exec_name }}.sh"
 
+    - name: Set temporary _env depending on whether env is a string or map
+      set_fact:
+        _env: "{{ env if env is mapping else (env | from_json) }}"
+
     - name: "Save full path of images dir in env attribute"
       set_stats:
         data:
-          env: "{{ env | combine( {'SINGULARITY_DIR': images_location_full_path} ) }}"
+          env: "{{ _env | combine( {'SINGULARITY_DIR': images_location_full_path, 'WORKSPACE_DIR': workspace_path} ) }}"
           exec_name: "{{ exec_name }}"

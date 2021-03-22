@@ -45,7 +45,7 @@
           public_address: "{{ server_info.server.public_v4 }}"
           id: "{{ server_info.server.id }}"
 
-    - name: Create temporary invetory for ssh wait
+    - name: Create temporary inventory for ssh wait
       add_host:
         name: server
         groups: vms
@@ -164,3 +164,15 @@
         name: node_exporter
         enabled: yes
         state: started
+
+    - name: Generating JSON object into a node_exporter.json file
+      become: yes
+      template:
+        src: "node_exporter.json.tmpl"
+        dest: "/tmp/node_exporter.json"
+        owner: "node_exporter"
+        group: "node_exporter"
+        mode: "0755"
+
+    - name: Register node-exporter in Consul server
+      shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register

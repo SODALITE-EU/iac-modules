@@ -62,6 +62,11 @@ node_types:
         required: false 
         constraints:
           - valid_values: [ "batch" ]
+      consul_server_address:
+        description: Public IPv4 address of the consul server (for the node exporter to register into)
+        type: string
+        default: "/tmp"
+        required: false
       env:
         description: Optional OpenStack environment
         type: map
@@ -76,6 +81,9 @@ node_types:
       ansible_ip:  
         description: ansible ipv4 
         type: string 
+      public_address:
+        type: string
+        description: Public ipv4
     requirements:  
       - protected_by:  
           relationship: tosca.relationships.DependsOn 
@@ -104,10 +112,12 @@ node_types:
               floating_ip_pools:        { type: list,    default: { get_property: [ SELF, floating_ip_pools ] } }
               userdata:                 { type: string,  default: { get_property: [ SELF, userdata ] } } 
               env:                      { type: map,     default: { get_property: [ SELF, env ] } } 
+              consul_server_address:    { type: string,  default: { get_property: [ SELF, consul_server_address ] } }
             implementation: 
               primary: playbooks/vm_create.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
+                - playbooks/node_exporter.json.tmpl
           delete:  
             inputs:  
               id:                       { type: string, default: { get_attribute: [ SELF, id ] } } 

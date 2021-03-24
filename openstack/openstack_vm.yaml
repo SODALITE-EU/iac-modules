@@ -65,7 +65,7 @@ node_types:
       consul_server_address:
         description: Public IPv4 address of the consul server (for the node exporter to register into)
         type: string
-        default: "/tmp"
+        default: ""
         required: false
       env:
         description: Optional OpenStack environment
@@ -117,7 +117,7 @@ node_types:
               primary: playbooks/vm_create.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
-                - playbooks/node_exporter.json.j2
+                - artifacts/node_exporter.json.j2
           delete:  
             inputs:  
               id:                       { type: string, default: { get_attribute: [ SELF, id ] } } 

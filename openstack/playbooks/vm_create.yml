@@ -58,11 +58,15 @@
           -o StrictHostKeyChecking=no
           {{ additional_ssh_args | default("") }}
         id: "{{ server_info.server.id }}"
-        public_adress: "{{ server_info.server.public_v4 }}"
+        public_address: "{{ server_info.server.public_v4 }}"
 
 
 - hosts: vms
   gather_facts: no
+  vars:
+    public_address: "{{ hostvars.server.public_address }}"
+    id: "{{ hostvars.server.id }}"
+
   tasks:
     - name: Wait for ssh to wake up
       wait_for_connection:
@@ -178,3 +182,4 @@
 
     - name: Register node-exporter in Consul server
       shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
+      when: consul_server_address != ""

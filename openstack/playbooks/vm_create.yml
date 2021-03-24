@@ -57,6 +57,8 @@
           -o UserKnownHostsFile=/dev/null
           -o StrictHostKeyChecking=no
           {{ additional_ssh_args | default("") }}
+        id: "{{ server_info.server.id }}"
+        public_adress: "{{ server_info.server.public_v4 }}"
 
 
 - hosts: vms
@@ -168,7 +170,7 @@
     - name: Generating JSON object into a node_exporter.json file
       become: yes
       template:
-        src: "node_exporter.json.tmpl"
+        src: "node_exporter.json.j2"
         dest: "/tmp/node_exporter.json"
         owner: "node_exporter"
         group: "node_exporter"

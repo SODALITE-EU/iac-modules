@@ -117,7 +117,7 @@ node_types:
               primary: playbooks/vm_create.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
-                - playbooks/node_exporter.json.tmpl
+                - playbooks/node_exporter.json.j2
           delete:  
             inputs:  
               id:                       { type: string, default: { get_attribute: [ SELF, id ] } } 

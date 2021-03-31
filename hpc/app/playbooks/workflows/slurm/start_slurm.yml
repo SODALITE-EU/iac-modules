@@ -12,9 +12,9 @@
         workspace_path: "{{ workspace_dir_results.stdout }}"
 
     - name: Submit the job
-      shell: sbatch {{ job_name }}.sh
+      shell: sbatch {{ exec_name }}.sh
       args:
-        chdir: "{{ job_workspace_path }}"
+        chdir: "{{ workspace_path }}"
       register: job
       environment: "{{ env if env is defined }}"
 

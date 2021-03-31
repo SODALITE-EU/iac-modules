@@ -45,14 +45,6 @@ node_types:
         required: False 
         type: map
         default: {}
-      gpu_selector:
-        description: 'Selector for GPU node affinity. Format { "key": "label_name", "value": "label_value" }'
-        type: map
-        default: { "key": "accelerators/gpu", "value": "true" }
-      edgetpu_selector:
-        description: 'Selector for EdgeTPU node affinity. Format { "key": "label_name", "value": "label_value" }'
-        type: map
-        default: { "key": "accelerators/edgetpu", "value": "true" }
       cpus:  
         required: False 
         type: integer
@@ -165,7 +157,7 @@ node_types:
       - kube_node:
           capability: tosca.capabilities.Compute
           node: sodalite.nodes.Kubernetes.Node
-          relationship: tosca.relationships.HostedOn
+          relationship: tosca.relationships.DependsOn
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -183,8 +175,6 @@ node_types:
               helm_values_files: { type: list, default: { get_property: [ SELF, values_files ] } }
               helm_values: { type: map, default: { get_property: [ SELF, values ] } }
               node_hostname: { type: string, default: { get_property: [ SELF, kube_node, name ] } }
-              gpu_selector: { type: map, default: { get_property: [ SELF, kube_node, gpu_selector ] } }
-              edgetpu_selector: { type: map, default: { get_property: [ SELF, kube_node, edgetpu_selector ] } }
               cpus: { type: integer, default: { get_property: [ SELF, kube_node, cpus ] } }
               gpus: { type: integer, default: { get_property: [ SELF, kube_node, gpus ] } }
               edgetpus: { type: integer, default: { get_property: [ SELF, kube_node, edgetpus ] } }

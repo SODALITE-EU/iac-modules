@@ -34,20 +34,40 @@
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: "{{ gpu_selector.key if gpu_selector.key is defined else 'accelerators/gpu' }}"
+            - key: "accelerators/gpu"
               operator: In
               values:
-              - "{{ gpu_selector.value if gpu_selector.value is defined else 'true' }}"
+              - "true"
 
     edgetpu_node_affinity_spec:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
           - matchExpressions:
-            - key: "{{ edgetpu_selector.key if edgetpu_selector.key is defined else 'accelerators/edgetpu' }}"
+            - key: "accelerators/edgetpu"
               operator: In
               values:
-              - "{{ edgetpu_selector.value if edgetpu_selector.value is defined else 'true' }}"
+              - "true"
+
+    # gpu_node_affinity_spec:
+    #   nodeAffinity:
+    #     requiredDuringSchedulingIgnoredDuringExecution:
+    #       nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: "{{ gpu_selector.key if gpu_selector.key is defined else 'accelerators/gpu' }}"
+    #           operator: In
+    #           values:
+    #           - "{{ gpu_selector.value if gpu_selector.value is defined else 'true' }}"
+
+    # edgetpu_node_affinity_spec:
+    #   nodeAffinity:
+    #     requiredDuringSchedulingIgnoredDuringExecution:
+    #       nodeSelectorTerms:
+    #       - matchExpressions:
+    #         - key: "{{ edgetpu_selector.key if edgetpu_selector.key is defined else 'accelerators/edgetpu' }}"
+    #           operator: In
+    #           values:
+    #           - "{{ edgetpu_selector.value if edgetpu_selector.value is defined else 'true' }}"
       
     accelerator_exists: "{{ gpus > 0 or edgetpus > 0 }}"
     accelerator_node_affinity: "{{ edgetpu_node_affinity_spec if edgetpus > 0 else (gpu_node_affinity_spec if gpus > 0 else {}) }}"

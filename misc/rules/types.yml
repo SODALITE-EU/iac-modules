@@ -1,0 +1,40 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+node_types:
+  sodalite.nodes.Configuration.ruleset:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: Node for registration/deregistration of the ruleset file
+    properties:
+      ruleset:
+        type: list
+        description: ruleset list with rules to register
+        required: True
+      ruleserver_address:
+        type: string
+        description: IP address of the ruleserver
+        required: True
+      ruleset_id: 
+        type: string
+        description: name of the ruleset to register
+        required: True
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              ruleset:            { default: { get_property: [ SELF, ruleset ] }, type: string }
+              ruleserver_address: { default: { get_property: [ SELF, ruleserver_address ] }, type: string }
+              ruleset_id:         { default: { get_property: [ SELF, ruleset_id ] }, type: string }
+            implementation:
+              primary: playbooks/ruleset_register.yml
+              dependencies:
+                - artifacts/ruleset.yml.j2
+
+          delete:
+            inputs:
+              ruleserver_address: { default: { get_property: [ SELF, ruleserver_address ] }, type: string }
+              ruleset_id:         { default: { get_property: [ SELF, ruleset_id ] }, type: string }
+            implementation:
+              primary: playbooks/ruleset_deregister.yml
+              

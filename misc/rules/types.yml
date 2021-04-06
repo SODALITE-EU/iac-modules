@@ -15,8 +15,10 @@ data_types:
         required: True
       desc:
         type: string
+        default: ""
       summary:
         type: string
+        default: ""
 
 node_types:
   sodalite.nodes.Configuration.ruleset:

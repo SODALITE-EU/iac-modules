@@ -2,12 +2,12 @@ groups:
 - name: alert.rules
   rules:
   {% for rule in ruleset %}
-  - alert: {{rule.name}}
-      expr: {{rule.expr }}
+  - alert: {{ rule.name }}
+      expr: {{ rule.expr }}
       for: {{ rule.for }}
       labels:
         severity: warning
       annotations:
-        summary: '{{rule.summary}} (instance {{'{{'}} $labels.instance {{'}}'}})'
-        description: '{{rule.desc}}\n   VALUE = {{'{{'}} $value {{'}}'}}\n  LABELS: {{'{{'}} $labels {{'}}'}}'
+        summary: '{{ rule.summary }} (instance {{'{{'}} $labels.instance {{'}}'}})'
+        description: '{{ rule.desc }}\n   VALUE = {{'{{'}} $value {{'}}'}}\n  LABELS: {{'{{'}} $labels {{'}}'}}'
   {% endfor %}

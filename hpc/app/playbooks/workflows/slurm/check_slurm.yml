@@ -13,7 +13,7 @@
   - name: Run continuously scontrol to monitor the status of the job
     shell:  scontrol show job -dd {{ job_id }} | grep -o 'JobState=[A-Z]*'
     register: job_monitor 
-    until: "job_monitor.stdout == 'JobState=COMPLETED'"
+    until: "job_monitor.stdout == 'JobState=COMPLETED' or job_monitor.stdout == 'JobState=FAILED'"
     delay: "{{ monitor_delay_step }}"
     retries: "{{ monitor_retries }}"
     async: "{{ walltime_sec | int }}"

@@ -1,5 +1,23 @@
 tosca_definitions_version: tosca_simple_yaml_1_3
 
+data_types:
+  sodalite.datatypes.Monitoring.Rule:
+    derived_from: tosca.datatypes.Root
+    properties:
+      name:
+        type: string
+        required: True
+      expr:
+        type: string
+        required: True
+      for:
+        type: string
+        required: True
+      desc:
+        type: string
+      summary:
+        type: string
+
 node_types:
   sodalite.nodes.Configuration.ruleset:
     derived_from: tosca.nodes.SoftwareComponent
@@ -7,8 +25,12 @@ node_types:
     properties:
       ruleset:
         type: list
+        entry_schema:
+          type: sodalite.datatypes.Monitoring.Rule
         description: ruleset list with rules to register
         required: True
+        constraints:
+          - min_length: 1
       ruleserver_address:
         type: string
         description: IP address of the ruleserver

@@ -16,6 +16,9 @@
       set_fact:
         docker_package: "docker-ce-19.03.5-3.el7"
         pip_package: python-pip
+        pip_install_packages:
+          - name: docker
+            version: "4.4.4"
       when: centos7
 
   tasks:

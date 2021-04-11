@@ -1,6 +1,8 @@
 ---
 - hosts: all
   gather_facts: no
+  vars:
+    GLOBUS_CERTS: "certificates"
   tasks:
     - name: "Transfer data"
       shell: >
@@ -10,4 +12,4 @@
         {{ src_protocol }}://{{ src_address if src_address != "localhost" }}{% if src_port is defined and src_port != None %}:{{ src_port }}{% endif %}/{{ src_path }}
         {{ dst_protocol }}://{{ dst_address if dst_address != "localhost" }}{% if dst_port is defined and dst_port != None %}:{{ dst_port }}{% endif %}/{{ dst_path }}
       environment:
-        X509_CERT_DIR: "{{ cert_path }}/{{ certdir }}"
+        X509_CERT_DIR: "{{ cert_path }}/{{ GLOBUS_CERTS }}"

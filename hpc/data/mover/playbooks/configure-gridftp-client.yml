@@ -1,34 +1,74 @@
 ---
 - hosts: all
-  gather_facts: no
+  gather_facts: yes
+  vars:
+    USERCERT: "usercert.pem"
+    USERKEY: "userkey.pem"
+    GLOBUS_CERTS_TARBALL: "globus-certificates.tar.xz"
+    GLOBUS_CERTS: "certificates"
   tasks:
-
-    - name: "Install gridftp client and proxy on Ubuntu"
+    - name: Install gridftp client and proxy on Ubuntu
       become: yes
-      apt:
-        name:
-          - globus-proxy-utils
-          - globus-gass-copy-progs
-          - tree
-        state: present
-        update_cache: yes
+      block:
+        - name: Install gridftp client and proxy via apt
+          apt:
+            name:
+              - globus-proxy-utils
+              - globus-gass-copy-progs
+              - tree
+            state: present
+            update_cache: yes
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      
+
+    - name: Install gridftp client and proxy on CentOS
+      become: yes
+      block:
+        - name: Import a key from Globus.org RPM
+          ansible.builtin.rpm_key:
+            state: present
+            key: https://downloads.globus.org/toolkit/gt6/stable/repo/rpm/RPM-GPG-KEY-Globus
+        - name: Install gridftp client and proxy via yum
+          yum:
+            name:
+              - https://downloads.globus.org/toolkit/globus-connect-server/globus-connect-server-repo-latest.noarch.rpm
+              - globus-proxy-utils
+              - globus-gass-copy-progs
+              - tree
+            state: present
+      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+    - name: "Register cert_path"
+      shell: readlink -f {{ ( cert_path != None and cert_path != '' ) | ternary(cert_path, ansible_env.HOME) }}
+      register: cert_path_results
+
+    - name: "Save full path of cert_path as fact"
+      set_fact:
+        cert_full_path: "{{ cert_path_results.stdout }}"
+
+    - name: "Save full path of cert_path as attribute"
+      set_stats:
+        data:
+          cert_full_path: "{{ cert_full_path }}"
 
     - name: Create certs directory
       file:
-        path: "{{ cert_path }}"
+        path: "{{ cert_full_path }}"
         state: directory
 
-    - name: Copy certs artifacts
+    - name: Copy user certificates and globus server certifictes
       block:
         - copy:
-            src: certs/
-            dest: "{{ cert_path }}/"
-
-    - name: Copy initial data artifacts
-      block:
+            content: "{{ usercert }}"
+            dest: "{{ cert_full_path }}/{{ USERCERT }}"
+            mode: 0600
         - copy:
-            src: data/
-            dest: "{{ initial_data_path }}/"
+            content: "{{ userkey }}"
+            dest: "{{ cert_full_path }}/{{ USERKEY }}"
+            mode: 0400
+        - unarchive:
+            src: "{{ GLOBUS_CERTS_TARBALL }}"
+            dest: "{{ cert_full_path }}/"
 
     - name: Adding hostnames
       become: yes
@@ -38,4 +78,4 @@
         line: "{{ item.value }} {{ item.key }}"
         state: present
       with_dict: "{{ hostnames }}"
-      when: hostnames is defined
+      when: (hostnames is defined) and (hostnames.keys() | length > 0)

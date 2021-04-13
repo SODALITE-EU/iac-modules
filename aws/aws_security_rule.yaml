@@ -21,11 +21,6 @@ data_types:
         default: 0.0.0.0/0 
         required: True 
         type: string 
-      direction:  
-        default: "ingress"
-        type: string 
-        constraints:  
-          - valid_values: ['ingress', 'egress'] 
 
 node_types:        
 
@@ -38,6 +33,15 @@ node_types:
         type: string 
       rules:  
         required: False 
+        default: []
+        constraints:  
+          - min_length: 1 
+        type: list 
+        entry_schema:  
+          type: sodalite.datatypes.AWS.SecurityRule 
+      rules_egress:  
+        required: False 
+        default: []
         constraints:  
           - min_length: 1 
         type: list 
@@ -75,7 +79,8 @@ node_types:
             implementation: 
               primary: playbooks/security_rule_create.yml 
             inputs:  
-              rules:                  { type: string, default: { get_property: [ SELF, rules  ] } } 
+              rules:                  { type: list, default: { get_property: [ SELF, rules  ] } } 
+              rules_egress:           { type: list, default: { get_property: [ SELF, rules_egress  ] } } 
               vpc_id:                 { type: string, default: { get_property: [ SELF, vpc_id  ] } } 
               region:                 { type: string, default: { get_property: [ SELF, region  ] } } 
               aws_access_key:         { type: string, default: { get_property: [ SELF, aws_access_key  ] } } 

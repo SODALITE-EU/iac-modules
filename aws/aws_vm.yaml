@@ -41,6 +41,11 @@ node_types:
         description: The AWS secret key.
         required: False 
         type: string   
+      userdata:
+        description: Additional userdata applied to configure the VM
+        type: string
+        default: ""
+        required: false 
       scheduler:
         description: Scheduler type for batch execution
         type: string
@@ -79,6 +84,7 @@ node_types:
               region:                   { type: string, default: { get_property: [ SELF, region  ] } } 
               aws_access_key:           { type: string, default: { get_property: [ SELF, aws_access_key  ] } } 
               aws_secret_key:           { type: string, default: { get_property: [ SELF, aws_secret_key  ] } } 
+              userdata:                 { type: string,  default: { get_property: [ SELF, userdata ] } } 
               ansible_user:             { type: string, default: { get_property: [ SELF, username ] } } 
             implementation: 
               primary: playbooks/vm_create.yml 

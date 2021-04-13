@@ -4,7 +4,7 @@
   vars:
     USERCERT: "usercert.pem"
     USERKEY: "userkey.pem"
-    GLOBUS_CERTS_TARBALL: "globus-certificates.tar.xz"
+    GLOBUS_CERTS_TARBALL: "globus-certificates.tar"
     GLOBUS_CERTS: "certificates"
   tasks:
     - name: Install gridftp client and proxy on Ubuntu
@@ -66,9 +66,10 @@
             content: "{{ userkey }}"
             dest: "{{ cert_full_path }}/{{ USERKEY }}"
             mode: 0400
-        - unarchive:
-            src: "{{ GLOBUS_CERTS_TARBALL }}"
-            dest: "{{ cert_full_path }}/"
+        - shell: "wget -O {{ cert_full_path }}/{{ GLOBUS_CERTS_TARBALL }} {{ globus_certificates_tarball_url }}"
+        - shell: "tar -xf {{ GLOBUS_CERTS_TARBALL }}"
+          args:
+            chdir: "{{ cert_full_path }}"
 
     - name: Adding hostnames
       become: yes

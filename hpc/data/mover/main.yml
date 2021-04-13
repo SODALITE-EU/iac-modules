@@ -29,6 +29,10 @@ node_types:
         type: string
         required: false
         default: ""
+      globus_certificates_tarball_url:
+        type: string
+        required: false
+        default: ""
       hostnames:
         type: map
         required: false
@@ -49,13 +53,12 @@ node_types:
               cert_path: { type: string, default: { get_property: [SELF, cert_path] } }
               usercert: { type: string, default: { get_property: [SELF, usercert] } }
               userkey: { type: string, default: { get_property: [SELF, userkey] } }
+              globus_certificates_tarball_url: { type: string, default: { get_property: [SELF, globus_certificates_tarball_url] } }
               hostnames: { type: string, default: { get_property: [SELF, hostnames] } }
               env: { type: map, default: { get_property: [SELF, env] } }
               ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
             implementation: 
               primary: playbooks/configure-gridftp-client.yml
-              dependencies: 
-                - artifacts/globus-certificates.tar.xz
 
   sodalite.data.mover.GridFTP.Transfer:
     description: >
@@ -84,7 +87,7 @@ node_types:
       src_port:
         type: tosca.datatypes.network.PortDef
         required: false
-        default: null
+        default: 0
       src_path:
         type: string
       dst_protocol:
@@ -98,7 +101,7 @@ node_types:
       dst_port:
         type: tosca.datatypes.network.PortDef
         required: false
-        default: null
+        default: 0
       dst_path:
         type: string
     requirements:

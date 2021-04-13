@@ -14,6 +14,7 @@
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
         assign_public_ip: yes
+        user_data: "{{ userdata }}"
       register: server_info
 
     - name: Set attributes

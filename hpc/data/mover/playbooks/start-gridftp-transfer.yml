@@ -1,13 +1,25 @@
 ---
 - hosts: all
   gather_facts: no
+  vars:
+    GLOBUS_CERTS: "certificates"
   tasks:
     - name: "Transfer data"
       shell: >
         globus-url-copy
-        -vb -r -cd
-        {% if parallel_streams is defined and parallel_streams > 1 %} -p {{ parallel_streams }}{% endif %} 
-        {{ src_protocol }}://{{ src_address if src_address != "localhost" }}{% if src_port is defined and src_port != None %}:{{ src_port }}{% endif %}/{{ src_path }}
-        {{ dst_protocol }}://{{ dst_address if dst_address != "localhost" }}{% if dst_port is defined and dst_port != None %}:{{ dst_port }}{% endif %}/{{ dst_path }}
+        -vb -r -cd 
+        {{ _parallel_streams }} 
+        {{ _src_protocol + _src_hostname + _src_port + _src_path }} 
+        {{ _dst_protocol + _dst_hostname + _dst_port + _dst_path }}
       environment:
-        X509_CERT_DIR: "{{ cert_path }}/{{ certdir }}"
+        X509_CERT_DIR: "{{ cert_path }}/{{ GLOBUS_CERTS }}"
+      vars:
+        _parallel_streams: "{{ '-p ' + parallel_streams if parallel_streams > 1 }}"
+        _src_protocol: "{{ src_protocol + '://' if src_protocol != 'file' else '' }}" 
+        _src_hostname: "{{ src_address if src_address != 'localhost' else '' }}"
+        _src_port: "{{ ':' + src_port if src_port > 0 else '' }}"
+        _src_path: "{{ '/' + src_path if src_protocol != 'file' and src_path[0] == '~' else src_path }}"
+        _dst_protocol: "{{ dst_protocol + '://' if dst_protocol != 'file' else '' }}"
+        _dst_hostname: "{{ dst_address if dst_address != 'localhost' else '' }}"
+        _dst_port: "{{ ':' + dst_port if dst_port > 0 else '' }}"
+        _dst_path: "{{ '/' + dst_path if dst_protocol != 'file' and dst_path[0] == '~' else dst_path }}"

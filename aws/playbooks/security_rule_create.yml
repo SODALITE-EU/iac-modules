@@ -10,6 +10,7 @@
         region: "{{ region }}"
         vpc_id: "{{ vpc_id }}"
         rules: "{{ rules }}"
+        rules_egress: "{{ rules_egress }}"
         aws_access_key: "{{ aws_access_key }}"
         aws_secret_key: "{{ aws_secret_key }}"
       register: group_info        

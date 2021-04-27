@@ -49,6 +49,11 @@
               values:
               - "true"
 
+    hostname_node_selector_spec:
+      nodeSelector:
+        kubernetes.io/hostname: "{{ node_hostname }}"
+
+
     # gpu_node_affinity_spec:
     #   nodeAffinity:
     #     requiredDuringSchedulingIgnoredDuringExecution:
@@ -120,4 +125,4 @@
       environment:
         K8S_AUTH_KUBECONFIG: "{{ kubeconfig }}"
       vars:
-        actual_helm_values: "{{ helm_values | combine( { 'affinity': node_affinity } ) }}"
+        actual_helm_values: "{{ helm_values | combine( hostname_node_selector_spec ) }}"

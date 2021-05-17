@@ -1,0 +1,64 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+data_types:
+  sodalite.datatypes.Monitoring.Rule:
+    derived_from: tosca.datatypes.Root
+    properties:
+      name:
+        type: string
+        required: True
+      expr:
+        type: string
+        required: True
+      for:
+        type: string
+        required: True
+      desc:
+        type: string
+        default: ""
+      summary:
+        type: string
+        default: ""
+
+node_types:
+  sodalite.nodes.Configuration.ruleset:
+    derived_from: tosca.nodes.SoftwareComponent
+    description: Node for registration/deregistration of the ruleset file
+    properties:
+      ruleset:
+        type: list
+        entry_schema:
+          type: sodalite.datatypes.Monitoring.Rule
+        description: ruleset list with rules to register
+        required: True
+        constraints:
+          - min_length: 1
+      ruleserver_address:
+        type: string
+        description: IP address of the ruleserver
+        required: True
+      ruleset_id: 
+        type: string
+        description: name of the ruleset to register
+        required: True
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              ruleset:            { default: { get_property: [ SELF, ruleset ] }, type: string }
+              ruleserver_address: { default: { get_property: [ SELF, ruleserver_address ] }, type: string }
+              ruleset_id:         { default: { get_property: [ SELF, ruleset_id ] }, type: string }
+            implementation:
+              primary: playbooks/ruleset_register.yml
+              dependencies:
+                - artifacts/ruleset.yml.j2
+
+          delete:
+            inputs:
+              ruleserver_address: { default: { get_property: [ SELF, ruleserver_address ] }, type: string }
+              ruleset_id:         { default: { get_property: [ SELF, ruleset_id ] }, type: string }
+            implementation:
+              primary: playbooks/ruleset_deregister.yml
+              

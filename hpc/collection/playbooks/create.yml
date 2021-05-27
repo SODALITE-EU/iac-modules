@@ -1,0 +1,53 @@
+---
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: >
+        Create temporary inventory for wm,
+        since opera requires internal envvars to access the target.
+        Need more examples to access static nodes without specifying them in the inventory file
+      add_host:
+        name: wm
+        groups: wm
+        ansible_host: "{{ wm_public_address }}"
+        ansible_user: "{{ wm_username }}"
+        ansible_ssh_private_key_file: "{{ wm_keypath }}"
+        ansible_ssh_common_args: >
+          -o IdentitiesOnly=yes
+          -o BatchMode=yes
+          -o UserKnownHostsFile=/dev/null
+          -o StrictHostKeyChecking=no
+
+- hosts: wm
+  gather_facts: yes
+  vars:
+    job_workspace_path: '{{ ( job_workspace != None ) | ternary(job_workspace, ansible_env.HOME) }}'
+  tasks:
+    - name: "Validate workspace"
+      stat:
+        path: "{{ job_workspace_path }}"
+      register: ws
+
+    - fail:
+        msg: "Incorrect workspace"
+      when: ws.stat.exists == false
+
+    - name: Run the job
+      sodalite.hpc.job:
+        job_name: "{{ job_name }}"
+        email_address: "{{ job_email }}"
+        node_count: "{{ job_nb_nodes }}"
+        process_count_per_node: "{{ job_ppn }}"
+        request_gpus: "{{ job_gpus }}"
+        job_contents: "{{ job_script }}"
+        job_workspace: "{{ job_workspace_path }}"
+        wall_time_limit: "{{ job_walltime }}"
+        keep_job_script: True
+      register: job_info
+
+    - name: Set attribute
+      set_stats:
+        data:
+          job_id: "{{ job_info.jobs[0].job_id }}"
+
+

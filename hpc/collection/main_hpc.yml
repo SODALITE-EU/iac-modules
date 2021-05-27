@@ -1,0 +1,165 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+capability_types:
+  sodalite.capabilities.hpc.Job:
+    derived_from: tosca.capabilities.Root
+
+  sodalite.capabilities.hpc.CompleteJob:
+    derived_from: tosca.capabilities.Root
+
+node_types:
+
+  sodalite.nodes.hpc.wm:
+    description: >
+      HPC wm, here we can define properties/attributes applicable for slurm WM
+    derived_from: tosca.nodes.Compute
+    attributes:
+      username:
+        type: string
+      ssh-key:
+        type: string
+    capabilities:
+      host:
+        type: tosca.capabilities.Compute
+        valid_source_types: [sodalite.nodes.hpc.job]
+      job_node:
+        type: tosca.capabilities.Compute
+        valid_source_types: [sodalite.nodes.hpc.job]
+
+  sodalite.nodes.hpc.job:
+    description: >
+      slurm job configuration
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      name:
+        type: string
+        description: Name of the job
+        required: true
+      script:
+        type: string
+        description: >
+          Job script that will be wrapped with j2 template to provide a PBS job script,
+          Ansible can process it with the template module
+        required: true
+      workspace:
+        type: string
+        description: Location of the sources and the job script
+        default: ~/
+      email:
+        type: string
+        description: >
+          Job status will be notified to this email
+        default: ""
+      nb_nodes:
+        type: integer
+        description: >
+          Number of requested nodes if node name is not specified
+        default: 1
+        required: false
+      ppn:
+        type: integer
+        description: >
+          Number of processes per node
+        default: 1
+      gpus:
+        type: integer
+        description: >
+          Number of requested GPUs
+        default: 0
+      walltime:
+        type: string
+        description: >
+          Expected time of execution
+          FORMAT: HH:MM:SS
+        required: true
+      enable_audit:
+        type: boolean
+        default: false
+    attributes:
+      job_id:
+        type: string
+        default: ""
+      audit:
+        type: string
+        default: ""
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              # attribute "public_address" is internal to get a host, but we need to fetch it in playbooks
+              wm_public_address: { type: string, default: { get_attribute: [SELF, host, public_address] } }
+              wm_username: { type: string, default: { get_attribute: [SELF, host, username] } }
+              wm_keypath: { type: string, default: { get_attribute: [SELF, host, ssh-key] } }
+              # Conditionals or default values will help to get rid of properties that are not used in playbooks
+              job_name: { type: string, default: { get_property: [SELF, name] } }
+              job_script: { type: string, default: { get_property: [SELF, script] } }
+              job_workspace: { type: string, default: { get_property: [SELF, workspace] } }
+              job_email: { type: string, default: { get_property: [SELF, email] } }
+              job_nb_nodes: { type: integer, default: { get_property: [SELF, nb_nodes] } }
+              job_ppn: { type: integer, default: { get_property: [SELF, ppn] } }
+              job_gpus: { type: integer, default: { get_property: [SELF, gpus] } }
+              job_walltime: { type: string, default: { get_property: [SELF, walltime] } }
+            implementation:
+              primary: playbooks/create.yml
+    requirements:
+      - host:
+          node: sodalite.nodes.hpc.wm
+          capability: tosca.capabilities.Compute
+          relationship: sodalite.relationships.jobHostedOn
+
+  sodalite.nodes.hpc.job.result:
+    description: >
+      slurm job result
+    derived_from: tosca.nodes.SoftwareComponent
+    requirements:
+      - host:
+          node: sodalite.nodes.hpc.wm
+          capability: tosca.capabilities.Compute
+          relationship: tosca.relationships.HostedOn
+      - job:
+          node: sodalite.nodes.hpc.job
+          capability: sodalite.capabilities.hpc.Job
+          relationship: tosca.relationships.DependsOn
+    properties:
+      monitor_period:
+        type: integer
+        default: 10
+      monitor_retries_headroom:
+        type: integer
+        default: 2
+      enable_audit:
+        type: boolean
+        default: false
+    attributes:
+      job_id:
+        type: string
+        default: ""
+      audit:
+        type: string
+        default: ""
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          start:
+            inputs:
+              wm_public_address: { type: string, default: { get_attribute: [SELF, host, public_address] } }
+              wm_username: { type: string, default: { get_attribute: [SELF, host, username] } }
+              wm_keypath: { type: string, default: { get_attribute: [SELF, host, ssh-key] } }
+              job_id: { type: string, default: { get_attribute: [SELF, job, job_id] } }
+              job_walltime: { type: string, default: { get_property: [SELF, job, walltime] } }
+              job_monitor_period: { type: integer, default: { get_property: [SELF, monitor_period] } }
+              job_monitor_retries_headroom: { type: integer, default: { get_property: [SELF, monitor_retries_headroom] } }
+              job_enable_audit: { type: boolean, default: { get_property: [SELF, enable_audit] } }
+            implementation: playbooks/check.yml
+    capabilities:
+      complete_job:
+        type: sodalite.capabilities.hpc.CompleteJob
+
+relationship_types:
+
+  sodalite.relationships.jobHostedOn: # currently does nothing
+    derived_from: tosca.relationships.HostedOn
+

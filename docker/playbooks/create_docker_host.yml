@@ -36,6 +36,9 @@
         - service:
             name: docker
             state: restarted
+    - name: make ansible fail
+      fail:
+        msg: ooops
 
   roles:
     - role: geerlingguy.repo-epel

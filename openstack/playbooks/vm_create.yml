@@ -54,7 +54,6 @@
         ansible_ssh_common_args: >
           -o IdentitiesOnly=yes
           -o BatchMode=yes
-          -o UserKnownHostsFile=/dev/null
           -o StrictHostKeyChecking=no
           {{ additional_ssh_args | default("") }}
         id: "{{ server_info.server.id }}"

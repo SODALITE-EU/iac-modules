@@ -17,6 +17,8 @@
         docker_package: "docker-ce-19.03.5-3.el7"
         pip_package: python-pip
         pip_install_packages:
+          - name: websocket-client
+            version: "0.59.0"
           - name: docker
             version: "4.4.4"
       when: centos7

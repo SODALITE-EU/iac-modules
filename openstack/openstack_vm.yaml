@@ -119,6 +119,8 @@ node_types:
               env:                      { type: map,     default: { get_property: [ SELF, env ] } } 
               consul_server_address:    { type: string,  default: { get_property: [ SELF, consul_server_address ] } }
               skydive_analyzer:         { type: string,  default: { get_property: [ SELF, skydive_analyzer ] } }
+              deployment_label:         { type: string,  default: { get_input: deployment_label } }
+              deployment_id:            { type: string,  default: { get_property: [ SELF, consul_server_address ] } }
             implementation: 
               primary: playbooks/vm_create.yml 
               dependencies:

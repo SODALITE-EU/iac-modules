@@ -7,7 +7,7 @@ After=network-online.target
 User=node_exporter
 Group=node_exporter
 Type=simple
-ExecStart=/usr/local/bin/node_exporter --group-name-label={{ deployment_label }} --deployment-id-label={{ deployment_id }}
+ExecStart=/usr/local/bin/node_exporter --group-name-label={{ deployment_label }} --monitoring-id-label={{ monitoring_id }} --instance-name-label={{ instance_name }}
 
 [Install]
 WantedBy=multi-user.target

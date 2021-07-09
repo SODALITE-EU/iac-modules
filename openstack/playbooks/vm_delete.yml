@@ -13,7 +13,9 @@
 
     - name: Deregister node-exporter in Consul server
       shell: curl --request PUT http://{{ consul_server_address|quote }}:8500/v1/agent/service/deregister/{{ monitoring_id }}-{{ id }}-node-exporter
-      when: consul_server_address != ""
+      when: 
+        - consul_server_address != ""
+        - include_exporter
       
     - name: Delete VM
       os_server:

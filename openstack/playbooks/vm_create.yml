@@ -82,7 +82,9 @@
         name: "node_exporter"
         shell: "/bin/bash"
         create_home: no
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Download Node exporter
       become: yes
@@ -90,7 +92,9 @@
         url: "https://github.com/SODALITE-EU/node_exporter/releases/download/v1.2.0-alpha/node_exporter-1.2.0-alpha.linux-amd64.tar.gz"
         dest: /tmp
         checksum: "sha256:1f40a90f8f61352b12cfb69d9d95a34e4e1cd4474ee96c04e4a356ac8e312184"
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Extract Node exporter
       become: yes
@@ -98,7 +102,9 @@
         src: "/tmp/node_exporter-1.2.0-alpha.linux-amd64.tar.gz"
         dest: "/tmp"
         remote_src: true
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
     
     - name: Copy executable
       become: yes
@@ -106,7 +112,9 @@
         src: "/tmp/node_exporter"
         dest: "/usr/local/bin"
         remote_src: true
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
 
     - name: Give the user "node_exporter" permission to that binary
       become: yes
@@ -115,21 +123,27 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
         
     - name: Delete compressed download
       become: yes
       file:
         path: "/tmp/node_exporter-1.2.0-alpha.linux-amd64.tar.gz"
         state: absent
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Delete node exporter in tmp
       become: yes
       file:
         path: "/tmp/node_exporter"
         state: absent
-      when: not stat_result.stat.exists    
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Create Node exporter Service File
       become: yes
@@ -139,11 +153,13 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
+      when: include_exporter
   
     - name: systemd reload
       become: yes
       systemd:
         daemon_reload: yes
+      when: include_exporter
   
     - name: Start Node exporter service
       become: yes
@@ -151,6 +167,7 @@
         name: node_exporter
         enabled: yes
         state: started
+      when: include_exporter
 
     - name: Generating JSON object into a node_exporter.json file
       become: yes
@@ -160,10 +177,13 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
+      when: include_exporter
 
     - name: Register node-exporter in Consul server
       shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
-      when: consul_server_address != ""
+      when:
+        - consul_server_address != ""
+        - include_exporter
 
     - name: Download Skydive binary
       shell:
@@ -176,4 +196,3 @@
       when: skydive_analyzer != ""
       args:
         chdir: "/tmp"
-

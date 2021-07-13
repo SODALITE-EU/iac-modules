@@ -99,7 +99,7 @@
     - name: Extract Node exporter
       become: yes
       unarchive:
-        src: "/tmp/node_exporter-1.2.0-alpha.linux-amd64.tar.gz"
+        src: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         dest: "/tmp"
         remote_src: true
       when: 
@@ -130,7 +130,7 @@
     - name: Delete compressed download
       become: yes
       file:
-        path: "/tmp/node_exporter-1.2.0-alpha.linux-amd64.tar.gz"
+        path: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         state: absent
       when: 
         - not stat_result.stat.exists

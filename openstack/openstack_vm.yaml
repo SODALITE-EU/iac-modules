@@ -67,6 +67,11 @@ node_types:
         type: string
         default: ""
         required: false
+      skydive_analyzer:
+        description: Address and Port of skydive analyzer
+        type: string
+        default: ""
+        required: false
       env:
         description: Optional OpenStack environment
         type: map
@@ -113,6 +118,7 @@ node_types:
               userdata:                 { type: string,  default: { get_property: [ SELF, userdata ] } } 
               env:                      { type: map,     default: { get_property: [ SELF, env ] } } 
               consul_server_address:    { type: string,  default: { get_property: [ SELF, consul_server_address ] } }
+              skydive_analyzer:         { type: string,  default: { get_property: [ SELF, skydive_analyzer ] } }
             implementation: 
               primary: playbooks/vm_create.yml 
               dependencies:

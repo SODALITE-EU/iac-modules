@@ -79,6 +79,16 @@ node_types:
           type: sodalite.datatypes.OpenStack.env
         required: false
         default: null
+      monitoring_id:
+        description: Monitoring ID set by the IDE that identifies the deployment
+        type: string
+        required: false
+        default: "no_monitoring_id"
+      deployment_label:
+        description: Deployment label set by the user to identify the deployment
+        type: string
+        required: false
+        default: "no_deployment_label"
     attributes:  
       id:  
         description: OpenStack id of the VM 
@@ -119,20 +129,20 @@ node_types:
               env:                      { type: map,     default: { get_property:  [ SELF, env                   ] } } 
               consul_server_address:    { type: string,  default: { get_property:  [ SELF, consul_server_address ] } }
               skydive_analyzer:         { type: string,  default: { get_property:  [ SELF, skydive_analyzer      ] } }
-              deployment_label:         { type: string,  default: { get_input:             deployment_label        } }
-              monitoring_id:            { type: string,  default: { get_input:             monitoring_id           } }
+              deployment_label:         { type: string,  default: { get_property:  [ SELF, deployment_label      ] } }
+              monitoring_id:            { type: string,  default: { get_property:  [ SELF, monitoring_id         ] } }
               instance_name:            { type: string,  default: { get_attribute: [ SELF, tosca_name            ] } }
-              id:                       { type: string,  default: { get_attribute: [ SELF, id                    ] } }
             implementation: 
               primary: playbooks/vm_create.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
                 - artifacts/node_exporter.json.j2
+                - artifacts/node_exporter.service.j2
           delete:  
             inputs:  
               id:                       { type: string, default: { get_attribute: [ SELF, id                    ] } } 
               env:                      { type: map,    default: { get_property:  [ SELF, env                   ] } }
-              monitoring_id:            { type: string, default: { get_input:             monitoring_id           } }
+              monitoring_id:            { type: string, default: { get_property:  [ SELF, monitoring_id         ] } }
               consul_server_address:    { type: string, default: { get_property:  [ SELF, consul_server_address ] } }
             implementation: 
               primary: playbooks/vm_delete.yml 

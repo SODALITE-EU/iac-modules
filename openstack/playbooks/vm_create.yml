@@ -82,31 +82,39 @@
         name: "node_exporter"
         shell: "/bin/bash"
         create_home: no
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Download Node exporter
       become: yes
       get_url:
-        url: "https://github.com/prometheus/node_exporter/releases/download/v1.0.1/node_exporter-1.0.1.linux-amd64.tar.gz"
+        url: "https://github.com/SODALITE-EU/node_exporter/releases/download/v1.2.0/node_exporter-1.2.0.linux-amd64.tar.gz"
         dest: /tmp
-        checksum: "sha256:3369b76cd2b0ba678b6d618deab320e565c3d93ccb5c2a0d5db51a53857768ae"
-      when: not stat_result.stat.exists
+        checksum: "sha256:fc8a1e891a5fd4b52ecc006f440ab39d15ad9c581cc0a6ff6ded15884c4eaebf"
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Extract Node exporter
       become: yes
       unarchive:
-        src: "/tmp/node_exporter-1.0.1.linux-amd64.tar.gz"
+        src: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         dest: "/tmp"
         remote_src: true
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
     
     - name: Copy executable
       become: yes
       copy: 
-        src: "/tmp/node_exporter-1.0.1.linux-amd64/node_exporter"
+        src: "/tmp/node_exporter"
         dest: "/usr/local/bin"
         remote_src: true
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
 
     - name: Give the user "node_exporter" permission to that binary
       become: yes
@@ -115,53 +123,43 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
         
     - name: Delete compressed download
       become: yes
       file:
-        path: "/tmp/node_exporter-1.0.1.linux-amd64.tar.gz"
+        path: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         state: absent
-      when: not stat_result.stat.exists
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
-    - name: Delete folder
+    - name: Delete node exporter in tmp
       become: yes
       file:
-        path: "/tmp/node_exporter-1.0.1.linux-amd64/"
+        path: "/tmp/node_exporter"
         state: absent
-      when: not stat_result.stat.exists    
+      when: 
+        - not stat_result.stat.exists
+        - include_exporter
   
     - name: Create Node exporter Service File
       become: yes
-      file:
-        path: /etc/systemd/system/node_exporter.service
-        state: touch
-      when: not stat_result.stat.exists
-  
-    - name: Edit Node exporter Service File
-      become: yes
-      blockinfile:
-        path: /etc/systemd/system/node_exporter.service
-        marker: "# {mark} SODALITE - ANSIBLE MANAGED BLOCK"
-        block: |
-          [Unit]
-          Description=Node Exporter
-          Wants=network-online.target
-          After=network-online.target
-  
-          [Service]
-          User=node_exporter
-          Group=node_exporter
-          Type=simple
-          ExecStart=/usr/local/bin/node_exporter
-  
-          [Install]
-          WantedBy=multi-user.target
+      template:
+        src: "node_exporter.service.j2"
+        dest: "/etc/systemd/system/node_exporter.service"
+        owner: "node_exporter"
+        group: "node_exporter"
+        mode: "0755"
+      when: include_exporter
   
     - name: systemd reload
       become: yes
       systemd:
         daemon_reload: yes
+      when: include_exporter
   
     - name: Start Node exporter service
       become: yes
@@ -169,6 +167,7 @@
         name: node_exporter
         enabled: yes
         state: started
+      when: include_exporter
 
     - name: Generating JSON object into a node_exporter.json file
       become: yes
@@ -178,10 +177,13 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
+      when: include_exporter
 
     - name: Register node-exporter in Consul server
       shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
-      when: consul_server_address != ""
+      when:
+        - consul_server_address != ""
+        - include_exporter
 
     - name: Download Skydive binary
       shell:
@@ -194,4 +196,3 @@
       when: skydive_analyzer != ""
       args:
         chdir: "/tmp"
-

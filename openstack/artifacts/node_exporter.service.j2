@@ -1,0 +1,13 @@
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter --group-name-label={{ deployment_label }} --monitoring-id-label={{ monitoring_id }} --instance-name-label={{ instance_name }}
+
+[Install]
+WantedBy=multi-user.target

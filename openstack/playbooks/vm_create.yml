@@ -38,6 +38,11 @@
       register: server_info
       environment: "{{ os_env if os_env is defined }}"
 
+    - name: Ensure VM is started
+      os_server_action:
+        action: start
+        server: "{{ vm_name }}"
+
     - name: Set attributes
       set_stats:
         data:

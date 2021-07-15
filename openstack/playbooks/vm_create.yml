@@ -20,7 +20,7 @@
                                 zip(ssh_config.values())|
                                 map('join', '=')|
                                 join(' -o ') }}"
-      when: ssh_config is defined and ssh_config | length > 0
+      when: ssh_config is defined and ssh_config != None and ssh_config | length > 0
 
     - name: Create VM
       os_server:

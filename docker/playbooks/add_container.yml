@@ -16,7 +16,8 @@
       hostname: "{{ hostname | default(omit) }}"
       image: "{{ image_path }}" 
       restart_policy: "{{ restart_policy | default(omit) }}"
-      detach: "{{ detach | default(omit) }}"      
+      restart: "{{ restart | default(omit) }}"
+      detach: "{{ detach | default(omit) }}"
       pull: true
       auto_remove: no
       command: 
@@ -53,6 +54,7 @@
       hostname: "{{ hostname | default(omit) }}"
       image: "{{ image_path }}" 
       restart_policy: "{{ restart_policy | default(omit) }}"
+      restart: "{{ restart | default(omit) }}"
       detach: "{{ detach | default(omit) }}"      
       pull: true
       auto_remove: no

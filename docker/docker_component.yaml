@@ -34,6 +34,11 @@ node_types:
         default: "always"
         type: string
         required: False
+      restart:
+        description: Force a matching container to be stopped and restarted.
+        default: no
+        type: string
+        required: False
       env:
         description: Map for docker environment variables key-value dictionary
         required: False
@@ -128,6 +133,7 @@ node_types:
               capabilities:         { type: list,    default: { get_property: [ SELF, capabilities ] } }
               labels:               { type: map,     default: { get_property: [ SELF, labels ] } }
               restart_policy:       { type: string,  default: { get_property: [ SELF, restart_policy ] } }
+              restart:              { type: string,  default: { get_property: [ SELF, restart ] } }
               image_name:           { type: string,  default: { get_property: [ SELF, image_name ] } }
               alias:                { type: string,  default: { get_property: [ SELF, alias ] } }
               exposed_ports:        { type: string,  default: { get_property: [ SELF, exposed_ports ] } }

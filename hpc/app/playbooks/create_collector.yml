@@ -1,0 +1,34 @@
+---
+- name: Call HPC Exporter API to create a slurm collector
+  uri: 
+    url: http://{{hpc_exporter_address}}/collector
+    method: post
+    body: 
+      scheduler": slurm
+      host: {{ ssh_host }}
+      deployment_label: {{ deployment_label }}
+      monitoring_id: {{ monitoring_id }}
+      hpc_label: {{ hpc_label }}
+      scrape_interval: {{ scrape_interval }}
+    status_code: 200
+    body_format: json
+    headers:
+      authorization: "Bearer {{ jwt }}"
+  when: scheduler == "slurm"
+
+- name: Call HPC Exporter API to create a PBS collector
+  uri: 
+    url: http://{{hpc_exporter_address}}/collector
+    method: post
+    body: 
+      scheduler": pbs
+      host: {{ ssh_host }}
+      deployment_label: {{ deployment_label }}
+      monitoring_id: {{ monitoring_id }}
+      hpc_label: {{ hpc_label }}
+      scrape_interval: {{ scrape_interval }}
+    status_code: 200
+    body_format: json
+    headers:
+      authorization: "Bearer {{ jwt }}"
+  when: scheduler == "torque"

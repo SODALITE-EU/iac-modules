@@ -10,3 +10,13 @@
 - name: Start job in any compute
   import_playbook: start_batch.yml
   when: scheduler == "batch"
+
+- name: Registering job_id in HPC Exporter
+  uri:
+    url: http://{{hpc_exporter_address}}/job
+    method: POST
+    body: 
+      job_id: {{ job_id }}
+      host: {{ ssh_host }}
+      monitoring_id: {{ monitoring_id }}
+    body_format: json

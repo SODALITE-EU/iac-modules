@@ -1,0 +1,12 @@
+---
+- name: Call HPC Exporter API to delete a collector
+  uri: 
+    url: http://{{hpc_exporter_address}}/collector
+    method: delete
+    body: 
+      host: {{ ssh_host }}
+      monitoring_id: {{ monitoring_id }}
+    status_code: 200
+    body_format: json
+    headers:
+      authorization: "Bearer {{ jwt }}"

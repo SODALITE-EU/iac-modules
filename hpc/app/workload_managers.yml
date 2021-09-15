@@ -65,18 +65,20 @@ node_types:
         operations:  
           start:
             inputs:
-              scheduler:        { type: string, default: { get_property: [SELF, scheduler] } }
-              ssh_host:         { type: string, default: { get_property: [SELF, ssh_host] } }
-              hpc_label:        { type: string, default: { get_property: [SELF, hpc_label] } }
-              monitoring_id:    { get_input: monitoring_id }
-              deployment_label: { get_input: deployment_label}
-              jwt:              { get_input: jwt }
+              scheduler:            { type: string, default: { get_property: [SELF, scheduler] } }
+              ssh_host:             { type: string, default: { get_property: [SELF, ssh_host] } }
+              hpc_label:            { type: string, default: { get_property: [SELF, hpc_label] } }
+              monitoring_id:        { get_input: monitoring_id }
+              deployment_label:     { get_input: deployment_label}
+              jwt:                  { get_input: jwt }
+              hpc_exporter_address: { get_input: hpc_exporter_address }
             implementation: 
               primary: playbooks/workflows/create_collector.yml
           delete:
             inputs:
-              ssh_host:         { type: string, default: { get_property: [SELF, ssh_host] } }
-              monitoring_id:    { get_input: monitoring_id }
-              jwt:              { get_input: jwt }
+              ssh_host:             { type: string, default: { get_property: [SELF, ssh_host] } }
+              monitoring_id:        { get_input: monitoring_id }
+              jwt:                  { get_input: jwt }
+              hpc_exporter_address: { get_input: hpc_exporter_address }
             implementation: 
               primary: playbooks/workflows/delete_collector.yml

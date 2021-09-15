@@ -136,7 +136,6 @@ node_types:
               primary: playbooks/vm_create.yml 
               dependencies:
                 - playbooks/egi_refresh_token.yml
-                - artifacts/node_exporter.json.j2
                 - artifacts/node_exporter.service.j2
           delete:  
             inputs:  

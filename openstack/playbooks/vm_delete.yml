@@ -12,7 +12,9 @@
       when: env.os_env is defined  
 
     - name: Deregister node-exporter in Consul server
-      shell: curl --request PUT http://{{ consul_server_address|quote }}:8500/v1/agent/service/deregister/{{ monitoring_id }}-{{ id }}-node-exporter
+      uri:
+        url: http://{{ consul_server_address|quote }}:8500/v1/agent/service/deregister/{{ monitoring_id }}-{{ id }}
+        method: PUT
       when: 
         - consul_server_address != ""
         - include_exporter

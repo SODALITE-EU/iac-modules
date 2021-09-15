@@ -169,18 +169,16 @@
         state: started
       when: include_exporter
 
-    - name: Generating JSON object into a node_exporter.json file
-      become: yes
-      template:
-        src: "node_exporter.json.j2"
-        dest: "/tmp/node_exporter.json"
-        owner: "node_exporter"
-        group: "node_exporter"
-        mode: "0755"
-      when: include_exporter
-
     - name: Register node-exporter in Consul server
-      shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
+      uri: 
+        url: http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
+        method: PUT
+        body:
+          Name: "consul-registered-node-exporters"
+          ID: "{{ monitoring_id }}-{{ id }}"
+          Address: "{{ public_address }}"
+          Port: 9100
+        body_format: json
       when:
         - consul_server_address != ""
         - include_exporter

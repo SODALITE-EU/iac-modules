@@ -49,7 +49,7 @@ node_types:
       hpc_label:
         required: false
         type: string
-        default: { get_property: [SELF, ssh_host] }
+        default: ""
       scrape_interval:
         required: false
         type: integer

@@ -36,16 +36,13 @@ node_types:
         type: string
         default: batch
         constraints:
-          - valid_values: [ torque, slurm, batch ]
+          - valid_values: [ torque, pbs, slurm, batch ]
       username:
         type: string
       ssh-key:
         required: false
         type: string
         default: ""
-      ssh_host: 
-        required: true
-        type: string
       hpc_label:
         required: false
         type: string
@@ -66,19 +63,19 @@ node_types:
           start:
             inputs:
               scheduler:            { type: string, default: { get_property: [SELF, scheduler] } }
-              ssh_host:             { type: string, default: { get_property: [SELF, ssh_host] } }
+              ssh_host:             { type: string, default: { get_attribute: [SELF, public_address] } }
               hpc_label:            { type: string, default: { get_property: [SELF, hpc_label] } }
               monitoring_id:        { get_input: monitoring_id }
               deployment_label:     { get_input: deployment_label}
               jwt:                  { get_input: jwt }
               hpc_exporter_address: { get_input: hpc_exporter_address }
             implementation: 
-              primary: playbooks/workflows/create_collector.yml
+              primary: playbooks/create_collector.yml
           delete:
             inputs:
-              ssh_host:             { type: string, default: { get_property: [SELF, ssh_host] } }
+              ssh_host:             { type: string, default: { get_attribute: [SELF, public_address] } }
               monitoring_id:        { get_input: monitoring_id }
               jwt:                  { get_input: jwt }
               hpc_exporter_address: { get_input: hpc_exporter_address }
             implementation: 
-              primary: playbooks/workflows/delete_collector.yml
+              primary: playbooks/delete_collector.yml

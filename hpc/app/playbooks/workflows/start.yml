@@ -20,3 +20,4 @@
       host: {{ ssh_host }}
       monitoring_id: {{ monitoring_id }}
     body_format: json
+  when: scheduler != "batch"

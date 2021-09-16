@@ -4,31 +4,14 @@
     url: http://{{hpc_exporter_address}}/collector
     method: post
     body: 
-      scheduler": slurm
+      scheduler: {{ "pbs" if (scheduler == "torque") else scheduler }}
       host: {{ ssh_host }}
       deployment_label: {{ deployment_label }}
       monitoring_id: {{ monitoring_id }}
-      hpc_label: {{ hpc_host if (hpc_label == "") else hpc_label }}
+      hpc_label: {{ ssh_host if (hpc_label == "") else hpc_label }}
       scrape_interval: {{ scrape_interval }}
     status_code: 200
     body_format: json
     headers:
       authorization: "Bearer {{ jwt }}"
-  when: scheduler == "slurm"
-
-- name: Call HPC Exporter API to create a PBS collector
-  uri: 
-    url: http://{{hpc_exporter_address}}/collector
-    method: post
-    body: 
-      scheduler": pbs
-      host: {{ ssh_host }}
-      deployment_label: {{ deployment_label }}
-      monitoring_id: {{ monitoring_id }}
-      hpc_label: {{ hpc_host if (hpc_label == "") else hpc_label }}
-      scrape_interval: {{ scrape_interval }}
-    status_code: 200
-    body_format: json
-    headers:
-      authorization: "Bearer {{ jwt }}"
-  when: scheduler == "torque"
+  when: scheduler != "batch"

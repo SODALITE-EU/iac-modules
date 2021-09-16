@@ -10,3 +10,4 @@
     body_format: json
     headers:
       authorization: "Bearer {{ jwt }}"
+  when: scheduler != "batch"

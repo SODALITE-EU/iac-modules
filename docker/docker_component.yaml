@@ -47,12 +47,12 @@ node_types:
       env_file:
         description: Path to file on remote with env vars
         required: False
-        type: string    
-        default: ""     
+        type: string
+        default: ""
       capabilities:
         description: List of capabilities to add to the container.
         required: False
-        type: list    
+        type: list
         default: []
       labels:
         description: Dictionary of key value pairs.
@@ -81,30 +81,30 @@ node_types:
         type: string
         required: False
         default:
-      ca_cert: 
+      ca_cert:
         description: Use a CA certificate when performing server verification by providing the path to a CA certificate file.
-        type: string 
-        required: False  
-        default: 
-      client_cert: 
-        description: Path to the client's TLS certificate file.
-        type: string 
-        required: False  
+        type: string
+        required: False
         default:
-      client_key: 
+      client_cert:
+        description: Path to the client's TLS certificate file.
+        type: string
+        required: False
+        default:
+      client_key:
         description: Path to the client's TLS key file.
-        type: string 
-        required: False  
+        type: string
+        required: False
         default:
       etc_hosts:
-        description: Host-to-IP mappings 
-        required: False 
-        type: map 
+        description: Host-to-IP mappings
+        required: False
+        type: map
         default: {}
-    attributes:  
+    attributes:
       ip_address:
         description: IP address of dockerized component
-        type: string            
+        type: string
     requirements:
       - host:
           capability: tosca.capabilities.Compute
@@ -120,7 +120,7 @@ node_types:
           node: sodalite.nodes.DockerRegistry
           relationship: tosca.relationships.DependsOn
           occurrences: [ 1, 1 ]
-          
+
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -128,9 +128,9 @@ node_types:
           create:
             inputs:
               env:                  { type: map,     default: { get_property: [ SELF, env ] } }
-              env_file:             { type: string,  default: { get_property: [ SELF, env_file ] } } 
+              env_file:             { type: string,  default: { get_property: [ SELF, env_file ] } }
               ports:                { type: list,    default: { get_property: [ SELF, ports ] } }
-              capabilities:         { type: list,    default: { get_property: [ SELF, capabilities ] } }
+              _capabilities:        { type: list,    default: { get_property: [ SELF, capabilities ] } }
               labels:               { type: map,     default: { get_property: [ SELF, labels ] } }
               restart_policy:       { type: string,  default: { get_property: [ SELF, restart_policy ] } }
               restart:              { type: string,  default: { get_property: [ SELF, restart ] } }
@@ -142,18 +142,18 @@ node_types:
               command:              { type: list,    default: { get_property: [ SELF, command ] } }
               docker_network_name:  { type: string,  default: { get_property: [ SELF, docker_network_name ] } }
               ca_cert:              { type: string,  default: { get_property: [ SELF, ca_cert ] } }
-              client_cert:          { type: string,  default: { get_property: [ SELF, client_cert ] } } 
-              client_key:           { type: string,  default: { get_property: [ SELF, client_key ] } } 
+              client_cert:          { type: string,  default: { get_property: [ SELF, client_cert ] } }
+              client_key:           { type: string,  default: { get_property: [ SELF, client_key ] } }
               etc_hosts:            { type: map,     default: { get_property: [ SELF, etc_hosts ] } }
               sleep:                { type: integer, default: { get_property: [ SELF, sleep ] } }
               public_address:       { type: string,  default: { get_attribute: [ SELF, host, public_address ] } }
-              ansible_user:         { type: string,  default: { get_attribute: [ SELF, host, username ] } } 
+              ansible_user:         { type: string,  default: { get_attribute: [ SELF, host, username ] } }
             implementation:
               primary: playbooks/add_container.yml
           delete:
             inputs:
               alias:                { type: string, default: { get_property: [ SELF, alias ] } }
-              ansible_user:         { type: string, default: { get_attribute: [ SELF, host, username ] } } 
+              ansible_user:         { type: string, default: { get_attribute: [ SELF, host, username ] } }
             implementation:
               primary: playbooks/remove_container.yml
 

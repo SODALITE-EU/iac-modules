@@ -1,0 +1,167 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - iac-modules/hpc/app/apps.yml
+  - iac-modules/hpc/app/workflows.yml
+
+topology_template:
+
+  inputs:
+  
+    hlrs-frontend-address:
+      type: string
+    hlrs-username:
+      type: string
+    monitoring_id:
+      type: string
+    deployment_label:
+      type: string
+    hpc_exporter_address:
+      type: string
+    jwt:
+      type: string
+
+  node_templates:
+
+### hlrs resources and runtime descriptions
+    hlrs-testbed:
+      type: sodalite.nodes.hpc.WM
+      properties:
+        scheduler: torque
+        username: { get_input: hlrs-username }
+      attributes:
+        public_address: { get_input: hlrs-frontend-address }
+      capabilities:
+        resources:
+          properties:
+            gpus: 5 
+            cpus: 200
+            memory: 650687
+        optimisations:
+          properties:
+            target: hlrs_testbed # same as in modak db
+
+    batch-app-runtime-hpc:
+      type: sodalite.nodes.batch.Container.Runtime
+      properties:
+        runtime: "singularity"
+        images_location: "images"
+        #certs_location: "certs"
+        #private_registry: "77.231.202.207"
+      requirements:
+        - host: hlrs-testbed
+
+### application description
+    batch-app-1:
+      type: sodalite.nodes.batch.Container.Application
+      # optimization: ai_training.tensor_flow # from AADM, comes as JSON-string to IaC Builder
+      properties:
+        app_tag: "batch-app-1"
+        app_type: "python"
+        executable: "python3 resnet/resnet_imagenet_main.py"
+        arguments: "--data_dir=/mnt/nfs/home/karthee/AI/data/tf_records/train/ -batch_size=96 --train_epochs=3 --train_steps=10 --use_synthetic_data=false"
+        container_runtime: "docker://modakopt/modak:tensorflow-2.1-gpu-src" # default container runtime. Might be substituted by IaCBuilder based on optimization
+        # container_runtime: "private://cadt:1.0.0" # default container runtime for private registry. Might be substituted based on optimization
+      requirements:
+        - runtime: batch-app-runtime-hpc
+        - host: hlrs-testbed
+
+    batch-job-1:
+      type: sodalite.nodes.batch.Container.JobExecution
+      properties:
+        job_name: "batch-job-1"
+        wall_time_limit: "12:00:00"
+        node_count: 1
+        core_count: 40
+        request_gpus: 1
+        queue: "ssd"
+        standard_output_file: "batch-job-1.out"
+        standard_error_file: "batch-job-1.err"
+        combine_stdout_stderr: true
+        copy_environment: true
+        request_event_notification: "abe"
+        email_address: jesus.2.ramos@atos.net
+        workspace: ~/batch-app
+        # from IaCBuilder
+        content: "#PBS -S /bin/bash\n## START OF HEADER ## \n#PBS -N batch-job-1\n\
+          #PBS -q ssd\n#PBS -l walltime=12:00:00 \n#PBS -l nodes=1:gpus=1:ssd\n#PBS\
+          \ -l procs=40\n#PBS -o batch-job-1.out\n#PBS -e batch-job-1.err\n\
+          #PBS -j oe\n#PBS -V \n#PBS -m abe\n#PBS -M jesus.2.ramos@atos.net\n## END OF HEADER\
+          \ ## \ncd $PBS_O_WORKDIR\nexport PATH=$PBS_O_WORKDIR:$PATH\n\nsleep 20 && echo 'some-output'\n"
+      attributes:
+        env:
+          SOME_VAR: "SOME_VALUE"
+      requirements:
+        - application: batch-app-1
+        - runtime: batch-app-runtime-hpc
+        - host: hlrs-testbed
+
+    batch-app-2:
+      type: sodalite.nodes.batch.Container.Application
+      # optimization: ai_training.tensor_flow # from AADM, comes as JSON-string to IaC Builder
+      properties:
+        app_tag: "batch-app-2"
+        app_type: "python"
+        executable: "python3 resnet/resnet_imagenet_main.py"
+        arguments: "--data_dir=/mnt/nfs/home/karthee/AI/data/tf_records/train/ -batch_size=96 --train_epochs=3 --train_steps=10 --use_synthetic_data=false"
+        container_runtime: "docker://modakopt/modak:tensorflow-2.1-gpu-src" # default container runtime. Might be substituted by IaCBuilder based on optimization
+        # container_runtime: "private://cadt:1.0.0" # default container runtime for private registry. Might be substituted based on optimization
+      requirements:
+        - runtime: batch-app-runtime-hpc
+        - host: hlrs-testbed
+
+    batch-job-2:
+      type: sodalite.nodes.batch.Container.JobExecution
+      properties:
+        job_name: "batch-job-2"
+        wall_time_limit: "12:00:00"
+        node_count: 1
+        core_count: 40
+        request_gpus: 1
+        queue: "ssd"
+        standard_output_file: "batch-job-2.out"
+        standard_error_file: "batch-job-2.err"
+        combine_stdout_stderr: true
+        copy_environment: true
+        request_event_notification: "abe"
+        email_address: jesus.2.ramos@atos.net
+        workspace: ~/batch-app
+        # from IaCBuilder
+        content: "#PBS -S /bin/bash\n## START OF HEADER ## \n#PBS -N batch-job-2\n\
+          #PBS -q ssd\n#PBS -l walltime=12:00:00 \n#PBS -l nodes=1:gpus=1:ssd\n#PBS\
+          \ -l procs=40\n#PBS -o batch-job-2.out\n#PBS -e batch-job-2.err\n\
+          #PBS -j oe\n#PBS -V \n#PBS -m abe\n#PBS -M jesus.2.ramos@atos.net\n## END OF HEADER\
+          \ ## \ncd $PBS_O_WORKDIR\nexport PATH=$PBS_O_WORKDIR:$PATH\n\nsleep 20 && echo 'some-output'\n"
+      attributes:
+        env:
+          SOME_VAR: "SOME_VALUE"
+      requirements:
+        - application: batch-app-2
+        - runtime: batch-app-runtime-hpc
+        - host: hlrs-testbed
+
+### job workflow
+    workflow-elem-1:
+      type: sodalite.nodes.workflow.Job
+      requirements:
+        - execution: batch-job-1
+        - host: hlrs-testbed
+
+    workflow-elem-result-1:
+      type: sodalite.nodes.workflow.Result
+      requirements:
+        - job: workflow-elem-1
+        - host: hlrs-testbed
+
+    workflow-elem-2:
+      type: sodalite.nodes.workflow.Job
+      requirements:
+        - execution: batch-job-2
+        - host: hlrs-testbed
+        - dependency: workflow-elem-result-1
+
+    workflow-elem-result-2:
+      type: sodalite.nodes.workflow.Result
+      requirements:
+        - job: workflow-elem-2
+        - host: hlrs-testbed

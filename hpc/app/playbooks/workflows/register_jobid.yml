@@ -1,0 +1,16 @@
+---
+- hosts: all
+  gather_facts: yes
+  tasks:
+  - name: Register JobID in the HPC Exporter's collector
+    uri:
+      url: http://{{hpc_exporter_address}}/job
+      method: post
+      body: 
+        job_id: "{{ job_id }}"
+        host: "{{ ssh_host }}"
+        monitoring_id: "{{ monitoring_id }}"
+      body_format: json
+      status_code: 200
+    delegate_to: localhost
+    delegate_facts: true

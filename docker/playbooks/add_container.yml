@@ -46,7 +46,7 @@
             - "{{ alias }}"
     notify:
       - "{{ alias }} sleep"
-    when: docker_network_name != None
+    when: (docker_network_name != None) and (docker_network_name != "")
 
   - name: "Launch {{ alias}} container"
     docker_container:
@@ -81,17 +81,17 @@
 
     notify:
       - "{{ alias }} sleep"
-    when: docker_network_name == None
+    when: (docker_network_name == None) or (docker_network_name == "")
 
   - shell: "docker inspect --format '{''{ .NetworkSettings.IPAddress }''}' {{ alias }}"
     register: result
-    when: docker_network_name != None
+    when: (docker_network_name != None) and (docker_network_name != "")
 
   - name: Extract ip address
     set_stats:
       data:
         ip_address: "{{ result.stdout }}"
-    when: docker_network_name != None
+    when: (docker_network_name != None) and (docker_network_name != "")
 
   handlers:
   - name: "{{ alias }} sleep"

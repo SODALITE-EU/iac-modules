@@ -1,0 +1,94 @@
+---
+- hosts: all
+  vars:
+    NIFI_FLOW_TEMPLATES_URL: "{{ NIFI_API_ENDPOINT }}/flow/templates"
+    NIFI_ROOT_PROCESS_GROUP_UPLOAD_TEMPLATE_URL: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ root_process_group_id }}/templates/upload"
+    NIFI_ROOT_PROCESS_GROUP_INIT_TEMPLATE_URL: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ root_process_group_id }}/template-instance"
+  tasks:
+    - name: List all accessible templates
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_FLOW_TEMPLATES_URL }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: list_of_flow_templates_response
+
+    - name: Extract templates from the list
+      ansible.builtin.set_fact:
+        list_of_flow_templates: "{{ list_of_flow_templates_response.json | json_query('templates[*].template') }}"
+
+    - name: Check existence of the template in the list
+      ansible.builtin.set_fact:
+        template_id: "{{ list_of_flow_templates | json_query(query) | first | default(None) }}"
+      vars:
+        query: "[?name=='{{ template }}'].id"
+
+    - name: Upload template file to NiFi template repository if template does not exist
+      ansible.builtin.uri:
+        method: POST
+        url: "{{ NIFI_ROOT_PROCESS_GROUP_UPLOAD_TEMPLATE_URL }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: form-multipart
+        body:
+          template:
+            filename: "{{ template }}.xml"
+            mime_type: application/xml
+          text_form_field: value
+        status_code: 201
+      register: upload_template_response
+      when: not template_id
+
+    - name: Extract newly uploaded template id
+      ansible.builtin.set_fact:
+        template_id: "{{ upload_template_response.content | regex_findall('<id>(.+)</id>', multiline=True) | first }}"
+      when: not template_id
+
+    - name: Initiate the template
+      ansible.builtin.uri:
+        method: POST
+        url: "{{ NIFI_ROOT_PROCESS_GROUP_INIT_TEMPLATE_URL }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          originX: "{{ canvas_layout.origin_X }}"
+          originY: "{{ canvas_layout.origin_Y }}"
+          templateId: "{{ template_id }}"
+        status_code: 201
+      register: pipeline_info
+
+    - name: Extract newly initiated process group id
+      ansible.builtin.set_fact:
+        process_group_id: "{{ pipeline_info.json.flow.processGroups[0].id }}"
+
+    - name: Set the name for the new process group
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ process_group_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          revision:
+            version: 0
+          component:
+            id: "{{ process_group_id }}"
+            name: "{{ name }}"
+        status_code: 200
+      register: pipeline_info
+
+    - name: Set template id and pipeline id attribute
+      set_stats:
+        data:
+          template_id: "{{ template_id }}"
+          pipeline_id: "{{ process_group_id }}"

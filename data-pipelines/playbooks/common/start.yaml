@@ -1,0 +1,15 @@
+---
+- hosts: all
+  tasks:
+    - name: Start the process group
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/flow/process-groups/{{ pipeline_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          id: "{{ pipeline_id }}"
+          state: "RUNNING"
+        status_code: 200

@@ -1,0 +1,148 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+data_types:
+
+  sodalite.datatypes.datapipeline.PipelineBlockCanvas:
+    derived_from: tosca.datatypes.Root
+    properties:
+      origin_X:
+        type: float
+      origin_Y:
+        type: float
+
+
+capability_types:
+
+  sodalite.capabilities.datapipeline.ConnectToPipeline:
+    derived_from: tosca.capabilities.Endpoint
+
+
+node_types:
+
+  sodalite.nodes.datapipeline.PipelineBlock:
+    derived_from: tosca.nodes.Root
+    attributes:
+      pipeline_id:
+        type: string
+      template_id:
+        type: string
+    properties:
+      name:
+        type: string
+        description: Name of the pipeline node
+      template:
+        type: string
+        description: Name of the template to use. It should match the template filename, e.g. some_template - some_template.xml
+      canvas_layout:
+        type: map
+        entry_schema:
+          type: sodalite.datatypes.datapipeline.PipelineBlockCanvas
+        required: false
+        default:
+          origin_X: 2.0
+          origin_Y: 3.0
+      root_process_group_id:
+        type: string
+        default: root
+      SchedulingStrategy:
+        type: string
+        description: EVENT_DRIVEN (default), CRON_DRIVEN and TIMER_DRIVEN. EVENT_DRIVEN is similar to TIMER_DRIVEN with 0 sec value in NiFi.
+        required: false
+        default: "EVENT_DRIVEN"
+        constraints:
+          - valid_values: [ "EVENT_DRIVEN", "CRON_DRIVEN", "TIMER_DRIVEN" ]
+      SchedulingPeriodTimer:
+        type: string
+        description: For TIMER_DRIVEN give in sec. Run schedule in X sec.
+        required: false
+        default: "0 sec"
+      SchedulingPeriodCron:
+        type: string
+        description: For CRON_DRIVEN give in CRON syntax. Run schedule at CRON time.
+        required: false
+        default: "* * * * * ?"
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              name:                     { type: string, default: { get_property: [ SELF, name ] } }
+              template:                 { type: string, default: { get_property: [ SELF, template ] } }
+              canvas_layout:            { type: map, default: { get_property: [ SELF, canvas_layout ] } }
+              root_process_group_id:    { type: string, default: { get_property: [ SELF, root_process_group_id ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/create.yaml
+          start:
+            inputs:
+              pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/start.yaml
+          stop:
+            inputs:
+              pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              root_process_group_id:    { type: string, default: { get_property: [ SELF, root_process_group_id ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/stop.yaml
+          delete:
+            inputs:
+              pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              root_process_group_id:    { type: string, default: { get_property: [ SELF, root_process_group_id ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/delete.yaml
+              dependencies: 
+              - playbooks/common/disconnect.yaml
+
+  sodalite.nodes.datapipeline.PipelineBlock.Consumer:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock
+    requirements:
+      - connectToPipeline:
+          capability: sodalite.capabilities.datapipeline.ConnectToPipeline
+          node: sodalite.nodes.datapipeline.PipelineBlock
+          relationship: sodalite.relationships.datapipeline.ConnectsTo
+          occurrences: [ 1, UNBOUNDED ]
+
+  sodalite.nodes.datapipeline.PipelineBlock.Publisher:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock
+    capabilities:
+      ConnectToPipeline:
+        occurrences: [ 1, UNBOUNDED ]
+        valid_source_types: [ sodalite.nodes.datapipeline.PipelineBlock.Consumer ]
+        type: sodalite.capabilities.datapipeline.ConnectToPipeline
+
+
+relationship_types:
+
+  sodalite.relationships.datapipeline.ConnectsTo:
+    derived_from: tosca.relationships.ConnectsTo
+    interfaces:
+      Configure:
+        type: tosca.interfaces.relationship.Configure
+        operations:
+          post_configure_source:
+            inputs:
+              root_process_group_id:    { type: string, default: { get_property: [ SOURCE, root_process_group_id ] } }
+              source_pipeline_id:       { type: string, default: { get_attribute: [ SOURCE, pipeline_id ] } }
+              target_pipeline_id:       { type: string, default: { get_attribute: [ TARGET, pipeline_id ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/connect.yaml

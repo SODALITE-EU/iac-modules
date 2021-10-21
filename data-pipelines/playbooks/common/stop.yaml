@@ -1,0 +1,38 @@
+---
+- hosts: all
+  tasks:
+    - name: Get the connections of the process group
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ root_process_group_id }}/connections"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: process_group_connections_response
+
+    - name: Extract connections info
+      ansible.builtin.set_fact:
+        process_group_connections: "{{ process_group_connections_response.json }}"
+
+    - name: Extract connections info
+      ansible.builtin.set_fact:
+        process_group_ids_to_stop: "{{ [ pipeline_id ] + ( process_group_connections | json_query(source_pg_id_query) ) + ( process_group_connections | json_query(destination_pg_id_query) ) }}"
+      vars:
+        source_pg_id_query: "connections[?destinationGroupId=='{{ pipeline_id }}' && component.source.running].sourceGroupId"
+        destination_pg_id_query: "connections[?sourceGroupId=='{{ pipeline_id }}' && component.destination.running].destinationGroupId"
+
+    - name: Stop the process group together with the connected process groups
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/flow/process-groups/{{ item }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          id: "{{ item }}"
+          state: "STOPPED"
+        status_code: 200
+      loop: "{{ process_group_ids_to_stop }}"

@@ -1,0 +1,51 @@
+---
+- hosts: all
+  tasks:
+    - name: Get the connections of the process group
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ root_process_group_id }}/connections"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: process_group_connections_response
+
+    - name: Extract connections info
+      ansible.builtin.set_fact:
+        process_group_connections: "{{ process_group_connections_response.json }}"
+
+    - name: Extract connections info
+      ansible.builtin.set_fact:
+        connection_ids_to_delete: "{{ ( process_group_connections | json_query(source_pg_id_query) ) + ( process_group_connections | json_query(destination_pg_id_query) ) }}"
+      vars:
+        destination_pg_id_query: "connections[?destinationGroupId=='{{ pipeline_id }}'].id"
+        source_pg_id_query: "connections[?sourceGroupId=='{{ pipeline_id }}'].id"
+
+    # include a task that retrieves the revision and deletes the connection as a workaround to loop a block of tasks
+    - name: Remove connections related to the process group
+      include_tasks: disconnect.yaml
+      loop: "{{ connection_ids_to_delete }}"
+
+    - name: Retrieve process group info
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ pipeline_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: process_group_info
+
+    - name: Delete the pipeline
+      ansible.builtin.uri:
+        method: DELETE
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ pipeline_id }}?version={{ revision_version }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: form-urlencoded
+      vars:
+        revision_version: "{{ process_group_info.json.revision.version }}"

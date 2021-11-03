@@ -1,0 +1,53 @@
+---
+- hosts: all
+  vars:
+    scheduling_strategy: "{{ 'TIMER_DRIVEN' if SchedulingStrategy == 'EVENT_DRIVEN' else SchedulingStrategy }}"
+    scheduling_period_timer_driven: "{{ '0 sec' if SchedulingStrategy == 'EVENT_DRIVEN' else SchedulingPeriodTimer }}"
+    scheduling_period: "{{ SchedulingPeriodCron if SchedulingStrategy == 'CRON_DRIVEN' else scheduling_period_timer_driven }}"
+  tasks:
+    - name: Retrieve process group processors info
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ pipeline_id }}/processors"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: process_group_info_response
+
+    - name: Extract info from the process group response
+      ansible.builtin.set_fact:
+        process_group_info: "{{ process_group_info_response.json }}"
+
+    - name: Extract processor id from PublishMQTT processor
+      ansible.builtin.set_fact:
+        publish_mqtt_processor_id: "{{ process_group_info | json_query(query) | first }}"
+      vars:
+        query: "processors[?component.type=='org.apache.nifi.processors.mqtt.PublishMQTT'].id"
+
+    - name: Configure PublishMQTT Processor within the process group
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/processors/{{ publish_mqtt_processor_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: no
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          revision:
+            version: 0
+          component:
+            id: "{{ publish_mqtt_processor_id }}"
+            config:
+              properties: 
+                Broker URI: "{{ BrokerURI }}"
+                Topic: "{{ Topic }}"
+                Username: "{{ Username }}"
+                Password: "{{ Password }}"
+                Quality of Service(QoS): "{{ QoS }}"
+                Retain Message: "{{ RetainMessage }}"
+              schedulingStrategy: "{{ scheduling_strategy }}"
+              schedulingPeriod: "{{ scheduling_period }}"
+        status_code: 200

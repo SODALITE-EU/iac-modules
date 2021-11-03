@@ -5,27 +5,29 @@ imports:
 
 node_types:
 
-  sodalite.nodes.datapipeline.Publisher.S3Bucket:
+  sodalite.nodes.datapipeline.Publisher.MQTT:
     derived_from: sodalite.nodes.datapipeline.PipelineBlock.Publisher
     properties:
       template:
         type: string
         description: Name of the template to use. It should match the template filename, e.g. some_template - some_template.xml
-        default: PubS3Bucket_Local
-      BucketName:
+        default: PubMQTT_Local
+      BrokerURI:
         type: string
-      Region:
+      Topic:
         type: string
-        default: eu-central-1
-      AccessKey:
+      Username:
         type: string
-      SecretKey:
+      Password:
         type: string
-      EndpointOverrideURL:
-        type: string
+      QoS:
+        type: integer
         required: false
-        default: ""
-        description: Should be set to a URL, if non-AWS services are used. By default AWS S3 will be used
+        default: 1
+      RetainMessage:
+        type: boolean
+        required: false
+        default: true
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -33,11 +35,12 @@ node_types:
           configure:
             inputs:
               pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
-              BucketName:               { type: string, default: { get_property: [ SELF, BucketName ] } }
-              Region:                   { type: string, default: { get_property: [ SELF, Region ] } }
-              AccessKey:                { type: string, default: { get_property: [ SELF, AccessKey ] } }
-              SecretKey:                { type: string, default: { get_property: [ SELF, SecretKey ] } }
-              EndpointOverrideURL:      { type: string, default: { get_property: [ SELF, EndpointOverrideURL ] } }
+              BrokerURI:                { type: string, default: { get_property: [ SELF, BrokerURI ] } }
+              Topic:                    { type: string, default: { get_property: [ SELF, Topic ] } }
+              Username:                 { type: string, default: { get_property: [ SELF, Username ] } }
+              Password:                 { type: string, default: { get_property: [ SELF, Password ] } }
+              QoS:                      { type: integer, default: { get_property: [ SELF, QoS ] } }
+              RetainMessage:            { type: boolean, default: { get_property: [ SELF, RetainMessage ] } }
               SchedulingStrategy:       { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
               SchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
               SchedulingPeriodCron:     { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
@@ -46,32 +49,34 @@ node_types:
               NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
               NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
             implementation:
-              primary: playbooks/s3/configure_pub.yaml
+              primary: playbooks/mqtt/configure_pub.yaml
     artifacts:
-      PubS3Bucket_Template:
+      PubMQTT_Template:
         type: tosca.artifacts.File
-        file: templates/s3/PubS3Bucket_Local.xml
+        file: templates/mqtt/PubMQTT_Local.xml
 
-  sodalite.nodes.datapipeline.Consumer.S3Bucket:
+  sodalite.nodes.datapipeline.Consumer.MQTT:
     derived_from: sodalite.nodes.datapipeline.PipelineBlock.Consumer
     properties:
       template:
         type: string
-        default: ConS3Bucket_Local
-      BucketName:
+        default: ConMQTT_Local
+      BrokerURI:
         type: string
-      Region:
+      Topic:
         type: string
-        default: eu-central-1
-      AccessKey:
+      Username:
         type: string
-      SecretKey:
+      Password:
         type: string
-      EndpointOverrideURL:
-        type: string
+      QoS:
+        type: integer
         required: false
-        default: ""
-        description: Should be set to a URL, if non-AWS services are used. By default AWS S3 will be used
+        default: 1
+      MaxQueueSize:
+        type: integer
+        required: false
+        default: 1024
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard
@@ -79,11 +84,12 @@ node_types:
           configure:
             inputs:
               pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
-              BucketName:               { type: string, default: { get_property: [ SELF, BucketName ] } }
-              Region:                   { type: string, default: { get_property: [ SELF, Region ] } }
-              AccessKey:                { type: string, default: { get_property: [ SELF, AccessKey ] } }
-              SecretKey:                { type: string, default: { get_property: [ SELF, SecretKey ] } }
-              EndpointOverrideURL:      { type: string, default: { get_property: [ SELF, EndpointOverrideURL ] } }
+              BrokerURI:                { type: string, default: { get_property: [ SELF, BrokerURI ] } }
+              Topic:                    { type: string, default: { get_property: [ SELF, Topic ] } }
+              Username:                 { type: string, default: { get_property: [ SELF, Username ] } }
+              Password:                 { type: string, default: { get_property: [ SELF, Password ] } }
+              QoS:                      { type: integer, default: { get_property: [ SELF, QoS ] } }
+              MaxQueueSize:             { type: integer, default: { get_property: [ SELF, MaxQueueSize ] } }
               SchedulingStrategy:       { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
               SchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
               SchedulingPeriodCron:     { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
@@ -92,8 +98,8 @@ node_types:
               NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
               NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
             implementation:
-              primary: playbooks/s3/configure_con.yaml
+              primary: playbooks/mqtt/configure_con.yaml
     artifacts:
-      ConS3Bucket_Template:
+      ConMQTT_Template:
         type: tosca.artifacts.File
-        file: templates/s3/ConS3Bucket_Local.xml
+        file: templates/mqtt/ConMQTT_Local.xml

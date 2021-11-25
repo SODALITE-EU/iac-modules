@@ -28,8 +28,8 @@ The S3 object will be sent to local pipeline.</comments>
                     <labelIndex>1</labelIndex>
                     <loadBalanceCompression>DO_NOT_COMPRESS</loadBalanceCompression>
                     <loadBalancePartitionAttribute></loadBalancePartitionAttribute>
-                    <loadBalanceStatus>LOAD_BALANCE_NOT_CONFIGURED</loadBalanceStatus>
-                    <loadBalanceStrategy>DO_NOT_LOAD_BALANCE</loadBalanceStrategy>
+                    <loadBalanceStatus>LOAD_BALANCE_INACTIVE</loadBalanceStatus>
+                    <loadBalanceStrategy>ROUND_ROBIN</loadBalanceStrategy>
                     <name></name>
                     <selectedRelationships>success</selectedRelationships>
                     <source>

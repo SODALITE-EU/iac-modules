@@ -1,0 +1,114 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - common.yaml
+
+node_types:
+
+  sodalite.nodes.datapipeline.Consumer.HTTP.TextList:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock.Consumer
+    properties:
+      template:
+        type: string
+        default: ConHTTPTextList_Local
+      List:
+        type: string
+        description: Multiline string containing a URL per line
+        default: ""
+      Filename:
+        type: string
+        description: Name of the file. NiFi expression can be used. By default, the base name of the url is used.
+        default: "${url:substringAfterLast('/'):substringBefore('?')}"
+      ListHTTPSchedulingStrategy:
+        type: string
+        description: See sodalite.nodes.datapipeline.PipelineBlock description
+        required: false
+        default: "TIMER_DRIVEN"
+        constraints:
+          - valid_values: [ "TIMER_DRIVEN" ]
+      ListHTTPSchedulingPeriodTimer:
+        type: string
+        description: We have to schedule to retrieve files only once. Run the next time unrealistically long time after. TODO - to implement state management to retrieve files once (see ListS3 implementation)
+        default: "100 weeks"
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          configure:
+            inputs:
+              pipeline_id:                      { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              List:                             { type: string, default: { get_property: [ SELF, List ] } }
+              Filename:                         { type: string, default: { get_property: [ SELF, Filename ] } }
+              SchedulingStrategy:               { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
+              SchedulingPeriodCron:             { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
+              SchedulingPeriodTimer:            { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
+              ListHTTPSchedulingStrategy:       { type: string, default: { get_property: [ SELF, ListHTTPSchedulingStrategy ] } }
+              ListHTTPSchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, ListHTTPSchedulingPeriodTimer ] } }
+              NIFI_ENDPOINT:                    { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:                { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:            { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:          { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/http/configure_text_list_con.yaml
+    artifacts:
+      ConHTTPTextList_Template:
+        type: tosca.artifacts.File
+        file: templates/http/ConHTTPTextList_Local.xml
+
+  sodalite.nodes.datapipeline.Consumer.HTTP.JsonList:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock.Consumer
+    properties:
+      template:
+        type: string
+        default: ConHTTPJsonList_Local
+      List:
+        type: list
+        description: JSON list of objects that will be split. Object must contain a URL that should be mapped to 'url' attribute via AttributeMap property
+        default: []
+        entry_schema:
+          type: map
+      AttributeMap:
+        type: map
+        description: Maps arbitrary attributes into JSONPath Expressions
+        default:
+          url: "$.url"
+      Filename:
+        type: string
+        description: Name of the file. NiFi expression can be used. By default, the base name of the url is used.
+        default: "${url:substringAfterLast('/'):substringBefore('?')}"
+      ListHTTPSchedulingStrategy:
+        type: string
+        description: See sodalite.nodes.datapipeline.PipelineBlock description
+        required: false
+        default: "TIMER_DRIVEN"
+        constraints:
+          - valid_values: [ "TIMER_DRIVEN" ]
+      ListHTTPSchedulingPeriodTimer:
+        type: string
+        description: We have to schedule to retrieve files only once. Run the next time unrealistically long time after. TODO - to implement state management to retrieve files once (see ListS3 implementation)
+        default: "100 weeks"
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          configure:
+            inputs:
+              pipeline_id:                      { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              List:                             { type: list, default: { get_property: [ SELF, List ] } }
+              AttributeMap:                     { type: map, default: { get_property: [ SELF, AttributeMap ] } }
+              Filename:                         { type: string, default: { get_property: [ SELF, Filename ] } }
+              SchedulingStrategy:               { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
+              SchedulingPeriodCron:             { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
+              SchedulingPeriodTimer:            { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
+              ListHTTPSchedulingStrategy:       { type: string, default: { get_property: [ SELF, ListHTTPSchedulingStrategy ] } }
+              ListHTTPSchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, ListHTTPSchedulingPeriodTimer ] } }
+              NIFI_ENDPOINT:                    { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:                { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:            { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:          { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/http/configure_json_list_con.yaml
+    artifacts:
+      ConHTTPJsonList_Template:
+        type: tosca.artifacts.File
+        file: templates/http/ConHTTPJsonList_Local.xml

@@ -1,0 +1,52 @@
+---
+- hosts: all
+  vars:
+    scheduling_strategy: "{{ 'TIMER_DRIVEN' if SchedulingStrategy == 'EVENT_DRIVEN' else SchedulingStrategy }}"
+    scheduling_period_timer_driven: "{{ '0 sec' if SchedulingStrategy == 'EVENT_DRIVEN' else SchedulingPeriodTimer }}"
+    scheduling_period: "{{ SchedulingPeriodCron if SchedulingStrategy == 'CRON_DRIVEN' else scheduling_period_timer_driven }}"
+  tasks:
+    - name: Retrieve process group processors info
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ pipeline_id }}/processors"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: process_group_info_response
+
+    - name: Extract info from the process group response
+      ansible.builtin.set_fact:
+        process_group_info: "{{ process_group_info_response.json }}"
+
+    - name: Extract processor id from PutS3Object processor
+      ansible.builtin.set_fact:
+        put_s3_object_processor_id: "{{ process_group_info | json_query(query) | first }}"
+      vars:
+        query: "processors[?component.type=='org.apache.nifi.processors.aws.s3.PutS3Object'].id"
+
+    - name: Configure PutS3Object Processor within the process group
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/processors/{{ put_s3_object_processor_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: no
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          revision:
+            version: 0
+          component:
+            id: "{{ put_s3_object_processor_id }}"
+            config:
+              properties: 
+                Bucket: "{{ BucketName }}"
+                Region: "{{ Region }}"
+                Access Key: "{{ AccessKey }}"
+                Secret Key: "{{ SecretKey }}"
+                Endpoint Override URL: "{{ EndpointOverrideURL }}"
+              schedulingStrategy: "{{ scheduling_strategy }}"
+              schedulingPeriod: "{{ scheduling_period }}"
+        status_code: 200

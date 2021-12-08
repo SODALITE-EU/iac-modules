@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<template encoding-version="1.3">
+    <description>Publish data to GridFTP. The data are from LOCAL pipeline</description>
+    <groupId>481d4e79-017d-1000-f050-ec66a99e18a4</groupId>
+    <name>PubGridFTP_Local</name>
+    <snippet>
+        <processGroups>
+            <id>d16c8a41-03e0-3a74-0000-000000000000</id>
+            <parentGroupId>03985ce4-611b-3722-0000-000000000000</parentGroupId>
+            <position>
+                <x>0.0</x>
+                <y>0.0</y>
+            </position>
+            <comments></comments>
+            <contents>
+                <connections>
+                    <id>12243030-3b77-3500-0000-000000000000</id>
+                    <parentGroupId>d16c8a41-03e0-3a74-0000-000000000000</parentGroupId>
+                    <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+                    <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+                    <destination>
+                        <groupId>d16c8a41-03e0-3a74-0000-000000000000</groupId>
+                        <id>7f871090-a244-337a-0000-000000000000</id>
+                        <type>PROCESSOR</type>
+                    </destination>
+                    <flowFileExpiration>0 sec</flowFileExpiration>
+                    <labelIndex>1</labelIndex>
+                    <loadBalanceCompression>DO_NOT_COMPRESS</loadBalanceCompression>
+                    <loadBalancePartitionAttribute></loadBalancePartitionAttribute>
+                    <loadBalanceStatus>LOAD_BALANCE_NOT_CONFIGURED</loadBalanceStatus>
+                    <loadBalanceStrategy>DO_NOT_LOAD_BALANCE</loadBalanceStrategy>
+                    <name></name>
+                    <source>
+                        <groupId>d16c8a41-03e0-3a74-0000-000000000000</groupId>
+                        <id>10cfbfa7-e2d1-3dd6-0000-000000000000</id>
+                        <type>INPUT_PORT</type>
+                    </source>
+                    <zIndex>0</zIndex>
+                </connections>
+                <inputPorts>
+                    <id>10cfbfa7-e2d1-3dd6-0000-000000000000</id>
+                    <parentGroupId>d16c8a41-03e0-3a74-0000-000000000000</parentGroupId>
+                    <position>
+                        <x>1200.0</x>
+                        <y>224.0</y>
+                    </position>
+                    <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                    <name>GridFTPSource</name>
+                    <state>STOPPED</state>
+                    <type>INPUT_PORT</type>
+                    <validationErrors>'Port 'GridFTPSource'' is invalid because Port has no incoming connections</validationErrors>
+                </inputPorts>
+                <processors>
+                    <id>7f871090-a244-337a-0000-000000000000</id>
+                    <parentGroupId>d16c8a41-03e0-3a74-0000-000000000000</parentGroupId>
+                    <position>
+                        <x>1144.0</x>
+                        <y>400.0</y>
+                    </position>
+                    <bundle>
+                        <artifact>nifi-scripting-nar</artifact>
+                        <group>org.apache.nifi</group>
+                        <version>1.15.0</version>
+                    </bundle>
+                    <config>
+                        <bulletinLevel>WARN</bulletinLevel>
+                        <comments></comments>
+                        <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                        <descriptors>
+                            <entry>
+<key>Script Engine</key>
+<value>
+    <name>Script Engine</name>
+</value>
+                            </entry>
+                            <entry>
+<key>Script File</key>
+<value>
+    <name>Script File</name>
+</value>
+                            </entry>
+                            <entry>
+<key>Script Body</key>
+<value>
+    <name>Script Body</name>
+</value>
+                            </entry>
+                            <entry>
+<key>Module Directory</key>
+<value>
+    <name>Module Directory</name>
+</value>
+                            </entry>
+                            <entry>
+<key>host</key>
+<value>
+    <name>host</name>
+</value>
+                            </entry>
+                            <entry>
+<key>port</key>
+<value>
+    <name>port</name>
+</value>
+                            </entry>
+                            <entry>
+<key>username</key>
+<value>
+    <name>username</name>
+</value>
+                            </entry>
+                            <entry>
+<key>path</key>
+<value>
+    <name>path</name>
+</value>
+                            </entry>
+                            <entry>
+<key>usercert</key>
+<value>
+    <name>usercert</name>
+</value>
+                            </entry>
+                            <entry>
+<key>userkey</key>
+<value>
+    <name>userkey</name>
+</value>
+                            </entry>
+                            <entry>
+<key>buffer</key>
+<value>
+    <name>buffer</name>
+</value>
+                            </entry>
+                        </descriptors>
+                        <executionNode>ALL</executionNode>
+                        <lossTolerant>false</lossTolerant>
+                        <penaltyDuration>30 sec</penaltyDuration>
+                        <properties>
+                            <entry>
+<key>Script Engine</key>
+<value>Groovy</value>
+                            </entry>
+                            <entry>
+<key>Script File</key>
+                            </entry>
+                            <entry>
+<key>Script Body</key>
+<value>// NiFi
+import org.apache.nifi.flowfile.attributes.CoreAttributes
+import org.apache.nifi.processor.AbstractProcessor
+import org.apache.nifi.processor.ProcessContext
+import org.apache.nifi.processor.ProcessSession
+import org.apache.nifi.processor.Relationship
+import org.apache.nifi.processor.util.StandardValidators
+
+// jGlobus
+import org.globus.gsi.gssapi.GlobusGSSCredentialImpl
+import org.globus.gsi.X509Credential
+import java.io.InputStream
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+import org.ietf.jgss.GSSCredential
+import org.globus.io.streams.GridFTPOutputStream
+import org.apache.commons.lang3.StringUtils
+
+class PutGridFTPProcessor extends AbstractProcessor {
+
+    // Properties
+    static final PropertyDescriptor HOST = new PropertyDescriptor.Builder()
+        .name("host")
+        .displayName("Host")
+        .description("GridFTP host address")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .build()
+    static final PropertyDescriptor PORT = new PropertyDescriptor.Builder()
+        .name("port")
+        .displayName("Port")
+        .description("GridFTP port")
+        .addValidator(StandardValidators.PORT_VALIDATOR)
+        .required(true)
+        .defaultValue("2811")
+        .build()
+    static final PropertyDescriptor USERNAME = new PropertyDescriptor.Builder()
+        .name("username")
+        .displayName("Username")
+        .description("GridFTP username")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .build()
+    static final PropertyDescriptor PATH = new PropertyDescriptor.Builder()
+        .name("path")
+        .displayName("Path")
+        .description("Path to the directory")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .defaultValue("~/")
+        .build()
+    static final PropertyDescriptor USERCERT = new PropertyDescriptor.Builder()
+        .name("usercert")
+        .displayName("Usercert")
+        .description("User certificate")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .sensitive(true)
+        .build()
+    static final PropertyDescriptor USERKEY = new PropertyDescriptor.Builder()
+        .name("userkey")
+        .displayName("Userkey")
+        .description("User certificate key")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .sensitive(true)
+        .build()
+    static final PropertyDescriptor BUFFER = new PropertyDescriptor.Builder()
+        .name("buffer")
+        .displayName("Buffer Size")
+        .description("Buffer for reading the input FlowFile")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .required(true)
+        .defaultValue("8192")
+        .build()
+
+    def REL_SUCCESS = new Relationship.Builder().name("success").description('FlowFiles that were successfully processed are routed here').build()
+    def REL_FAILURE = new Relationship.Builder().name("failure").description('FlowFiles are routed here if an error occurs during processing').build()
+
+    @Override
+    protected List&lt;PropertyDescriptor&gt; getSupportedPropertyDescriptors() {
+        def properties = [] as ArrayList
+        properties.add(HOST)
+        properties.add(PORT)
+        properties.add(USERNAME)
+        properties.add(PATH)
+        properties.add(USERCERT)
+        properties.add(USERKEY)
+        properties.add(BUFFER)
+        properties
+    }
+
+    @Override
+    Set&lt;Relationship&gt; getRelationships() {
+       [REL_SUCCESS, REL_FAILURE] as Set&lt;Relationship&gt;
+    }
+
+    @Override
+    void onTrigger(ProcessContext context, ProcessSession session) {
+
+        FlowFile flowFile = session.get()
+        if (flowFile == null) {
+            return;
+        }
+
+        String destHostname = context.getProperty(HOST).getValue()
+        int destPort = context.getProperty(PORT).asInteger()
+        String destPath = StringUtils.removeEnd(context.getProperty(PATH).getValue(), "/") + "/" + flowFile.getAttribute("filename")
+
+        try {
+
+            GlobusGSSCredentialImpl gss_cred = null
+
+            InputStream USERCERT_STREAM = new ByteArrayInputStream(context.getProperty(USERCERT).getValue().getBytes(StandardCharsets.US_ASCII))
+            InputStream USERKEY_STREAM = new ByteArrayInputStream(context.getProperty(USERKEY).getValue().getBytes(StandardCharsets.US_ASCII))
+            X509Credential x509_cred = new X509Credential(
+                USERCERT_STREAM, USERKEY_STREAM
+            )
+            gss_cred = new GlobusGSSCredentialImpl(
+                x509_cred, GSSCredential.DEFAULT_LIFETIME
+            )
+
+            GridFTPOutputStream output_stream = new GridFTPOutputStream(
+                gss_cred,
+                destHostname,
+                destPort,
+                destPath,
+                false
+            );
+
+            session.read(flowFile, {inputStream -&gt;
+                byte[] buf = new byte[context.getProperty(BUFFER).asInteger()]
+                int length
+                try {
+                    while ((length = inputStream.read(buf)) &gt; 0) {
+                        output_stream.write(buf, 0, length)
+                        output_stream.flush()
+                    }
+                } finally {
+                    output_stream.close()
+                }
+            } as InputStreamCallback)
+
+            session.transfer(flowFile, REL_SUCCESS)
+            
+        } catch (final Exception e) {
+            getLogger().error('Failed to download {}; will route to failure', [e] as Object[])
+            session.transfer(flowFile, REL_FAILURE);
+            return;
+        }
+        getLogger().info('Successfully downloaded')
+    }
+}
+
+processor = new PutGridFTPProcessor()</value>
+                            </entry>
+                            <entry>
+<key>Module Directory</key>
+                            </entry>
+                            <entry>
+<key>host</key>
+                            </entry>
+                            <entry>
+<key>port</key>
+<value>2811</value>
+                            </entry>
+                            <entry>
+<key>username</key>
+                            </entry>
+                            <entry>
+<key>path</key>
+<value>~/</value>
+                            </entry>
+                            <entry>
+<key>usercert</key>
+                            </entry>
+                            <entry>
+<key>userkey</key>
+                            </entry>
+                            <entry>
+<key>buffer</key>
+<value>8192</value>
+                            </entry>
+                        </properties>
+                        <runDurationMillis>0</runDurationMillis>
+                        <schedulingPeriod>0 sec</schedulingPeriod>
+                        <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                        <yieldDuration>1 sec</yieldDuration>
+                    </config>
+                    <executionNodeRestricted>false</executionNodeRestricted>
+                    <name>PutGridFTP</name>
+                    <relationships>
+                        <autoTerminate>true</autoTerminate>
+                        <name>failure</name>
+                    </relationships>
+                    <relationships>
+                        <autoTerminate>true</autoTerminate>
+                        <name>success</name>
+                    </relationships>
+                    <state>STOPPED</state>
+                    <style/>
+                    <type>org.apache.nifi.processors.script.InvokeScriptedProcessor</type>
+                </processors>
+            </contents>
+            <defaultBackPressureDataSizeThreshold>1 GB</defaultBackPressureDataSizeThreshold>
+            <defaultBackPressureObjectThreshold>10000</defaultBackPressureObjectThreshold>
+            <defaultFlowFileExpiration>0 sec</defaultFlowFileExpiration>
+            <flowfileConcurrency>UNBOUNDED</flowfileConcurrency>
+            <flowfileOutboundPolicy>STREAM_WHEN_AVAILABLE</flowfileOutboundPolicy>
+            <name>PubGridFTP_Local</name>
+            <variables/>
+        </processGroups>
+    </snippet>
+    <timestamp>11/24/2021 11:12:46 UTC</timestamp>
+</template>

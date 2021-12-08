@@ -1,0 +1,67 @@
+---
+- hosts: all
+  tasks:
+    - name: Get the list of output port of source pipeline
+      uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ source_pipeline_id }}/output-ports"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: output_ports_list
+
+    - name: Extract output port id of source pipeline
+      ansible.builtin.set_fact:
+        output_port_id: "{{ output_ports_list.json.outputPorts[0].id }}"
+
+    - name: Get the list of input port of target pipeline
+      uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ target_pipeline_id }}/input-ports"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: input_ports_list
+
+    - name: Extract input port id of target pipeline
+      ansible.builtin.set_fact:
+        input_port_id: "{{ input_ports_list.json.inputPorts[0].id }}"
+
+    - name: Connect two pipelines
+      ansible.builtin.uri:
+        method: POST
+        url: "{{ NIFI_API_ENDPOINT }}/process-groups/{{ root_process_group_id }}/connections"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          revision: 
+            version: 0
+          component:            
+            source: 
+              id: "{{ output_port_id }}"
+              groupId: "{{ source_pipeline_id }}"
+              type: "OUTPUT_PORT"
+            destination: 
+              id: "{{ input_port_id }}"
+              groupId: "{{ target_pipeline_id }}"
+              type: "INPUT_PORT"  
+        status_code: 201
+
+    - name: Start target process-groups
+      ansible.builtin.uri:
+        method: PUT
+        url: "{{ NIFI_API_ENDPOINT }}/flow/process-groups/{{ target_pipeline_id }}"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+        body_format: json
+        body:
+          id: "{{ target_pipeline_id }}"
+          state: "RUNNING"  
+        status_code: 200

@@ -1,0 +1,22 @@
+---
+- name: Retrieve connection info
+  ansible.builtin.uri:
+    method: GET
+    url: "{{ NIFI_API_ENDPOINT }}/connections/{{ item }}"
+    validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+    follow_redirects: safe
+    return_content: yes
+    headers:
+      Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+  register: connection_info
+
+- name: Delete the connection
+  ansible.builtin.uri:
+    method: DELETE
+    url: "{{ NIFI_API_ENDPOINT }}/connections/{{ item }}?version={{ revision_version }}"
+    validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+    headers:
+      Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+    body_format: form-urlencoded
+  vars:
+    revision_version: "{{ connection_info.json.revision.version }}"

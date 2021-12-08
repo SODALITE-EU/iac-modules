@@ -1,0 +1,105 @@
+tosca_definitions_version: tosca_simple_yaml_1_3
+
+imports:
+  - common.yaml
+
+node_types:
+
+  sodalite.nodes.datapipeline.Publisher.MQTT:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock.Publisher
+    properties:
+      template:
+        type: string
+        description: Name of the template to use. It should match the template filename, e.g. some_template - some_template.xml
+        default: PubMQTT_Local
+      BrokerURI:
+        type: string
+      Topic:
+        type: string
+      Username:
+        type: string
+      Password:
+        type: string
+      QoS:
+        type: integer
+        required: false
+        default: 1
+      RetainMessage:
+        type: boolean
+        required: false
+        default: true
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          configure:
+            inputs:
+              pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              BrokerURI:                { type: string, default: { get_property: [ SELF, BrokerURI ] } }
+              Topic:                    { type: string, default: { get_property: [ SELF, Topic ] } }
+              Username:                 { type: string, default: { get_property: [ SELF, Username ] } }
+              Password:                 { type: string, default: { get_property: [ SELF, Password ] } }
+              QoS:                      { type: integer, default: { get_property: [ SELF, QoS ] } }
+              RetainMessage:            { type: boolean, default: { get_property: [ SELF, RetainMessage ] } }
+              SchedulingStrategy:       { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
+              SchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
+              SchedulingPeriodCron:     { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/mqtt/configure_pub.yaml
+    artifacts:
+      PubMQTT_Template:
+        type: tosca.artifacts.File
+        file: templates/mqtt/PubMQTT_Local.xml
+
+  sodalite.nodes.datapipeline.Consumer.MQTT:
+    derived_from: sodalite.nodes.datapipeline.PipelineBlock.Consumer
+    properties:
+      template:
+        type: string
+        default: ConMQTT_Local
+      BrokerURI:
+        type: string
+      Topic:
+        type: string
+      Username:
+        type: string
+      Password:
+        type: string
+      QoS:
+        type: integer
+        required: false
+        default: 1
+      MaxQueueSize:
+        type: integer
+        required: false
+        default: 1024
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          configure:
+            inputs:
+              pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              BrokerURI:                { type: string, default: { get_property: [ SELF, BrokerURI ] } }
+              Topic:                    { type: string, default: { get_property: [ SELF, Topic ] } }
+              Username:                 { type: string, default: { get_property: [ SELF, Username ] } }
+              Password:                 { type: string, default: { get_property: [ SELF, Password ] } }
+              QoS:                      { type: integer, default: { get_property: [ SELF, QoS ] } }
+              MaxQueueSize:             { type: integer, default: { get_property: [ SELF, MaxQueueSize ] } }
+              SchedulingStrategy:       { type: string, default: { get_property: [ SELF, SchedulingStrategy ] } }
+              SchedulingPeriodTimer:    { type: string, default: { get_property: [ SELF, SchedulingPeriodTimer ] } }
+              SchedulingPeriodCron:     { type: string, default: { get_property: [ SELF, SchedulingPeriodCron ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/mqtt/configure_con.yaml
+    artifacts:
+      ConMQTT_Template:
+        type: tosca.artifacts.File
+        file: templates/mqtt/ConMQTT_Local.xml

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <template encoding-version="1.3">
-    <description></description>
+    <description>Publish data to GridFTP. The data are from LOCAL pipeline</description>
     <groupId>481d4e79-017d-1000-f050-ec66a99e18a4</groupId>
     <name>PubGridFTP_Local</name>
     <snippet>
@@ -27,8 +27,8 @@
                     <labelIndex>1</labelIndex>
                     <loadBalanceCompression>DO_NOT_COMPRESS</loadBalanceCompression>
                     <loadBalancePartitionAttribute></loadBalancePartitionAttribute>
-                    <loadBalanceStatus>LOAD_BALANCE_INACTIVE</loadBalanceStatus>
-                    <loadBalanceStrategy>ROUND_ROBIN</loadBalanceStrategy>
+                    <loadBalanceStatus>LOAD_BALANCE_NOT_CONFIGURED</loadBalanceStatus>
+                    <loadBalanceStrategy>DO_NOT_LOAD_BALANCE</loadBalanceStrategy>
                     <name></name>
                     <source>
                         <groupId>d16c8a41-03e0-3a74-0000-000000000000</groupId>

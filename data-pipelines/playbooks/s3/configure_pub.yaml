@@ -42,6 +42,7 @@
             id: "{{ put_s3_object_processor_id }}"
             config:
               properties: 
+                Object Key: "{{ ObjectKey }}"
                 Bucket: "{{ BucketName }}"
                 Region: "{{ Region }}"
                 Access Key: "{{ AccessKey }}"

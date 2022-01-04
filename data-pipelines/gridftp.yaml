@@ -29,7 +29,7 @@ node_types:
         type: string
       BufferSize:
         type: integer
-        default: 2811
+        default: 8192
     interfaces:
       Standard:
         type: tosca.interfaces.node.lifecycle.Standard

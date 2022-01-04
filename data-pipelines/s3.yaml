@@ -12,6 +12,9 @@ node_types:
         type: string
         description: Name of the template to use. It should match the template filename, e.g. some_template - some_template.xml
         default: PubS3Bucket_Local
+      ObjectKey:
+        type: string
+        default: "${filename}"
       BucketName:
         type: string
       Region:
@@ -33,6 +36,7 @@ node_types:
           configure:
             inputs:
               pipeline_id:              { type: string, default: { get_attribute: [ SELF, pipeline_id ] } }
+              ObjectKey:                { type: string, default: { get_property: [ SELF, ObjectKey ] } }
               BucketName:               { type: string, default: { get_property: [ SELF, BucketName ] } }
               Region:                   { type: string, default: { get_property: [ SELF, Region ] } }
               AccessKey:                { type: string, default: { get_property: [ SELF, AccessKey ] } }

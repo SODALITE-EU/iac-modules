@@ -126,6 +126,44 @@ node_types:
         valid_source_types: [ sodalite.nodes.datapipeline.PipelineBlock.Consumer ]
         type: sodalite.capabilities.datapipeline.ConnectToPipeline
 
+  sodalite.nodes.datapipeline.TransferCompletion:
+    derived_from: tosca.nodes.Root
+    properties:
+      total_monitor_time:
+        type: integer
+        default: 86400
+        description: "In seconds, default is a full day"
+      monitor_period:
+        type: integer
+        default: 20
+        description: "In seconds"
+    requirements:
+      - consumer:
+          node: sodalite.nodes.datapipeline.PipelineBlock.Consumer
+          capability: tosca.capabilities.Root
+          relationship: tosca.relationships.DependsOn
+          occurrences: [ 1, 1 ]
+      - publisher:
+          node: sodalite.nodes.datapipeline.PipelineBlock.Publisher
+          capability: tosca.capabilities.Root
+          relationship: tosca.relationships.DependsOn
+          occurrences: [ 1, 1 ]
+    interfaces:
+      Standard:
+        type: tosca.interfaces.node.lifecycle.Standard
+        operations:
+          create:
+            inputs:
+              consumer_pipeline_id:     { type: string, default: { get_attribute: [ SELF, consumer, pipeline_id ] } }
+              publisher_pipeline_id:    { type: string, default: { get_attribute: [ SELF, publisher, pipeline_id ] } }
+              total_monitor_time:       { type: integer, default: { get_property: [ SELF, total_monitor_time ] } }
+              monitor_period:           { type: integer, default: { get_property: [ SELF, monitor_period ] } }
+              NIFI_ENDPOINT:            { type: string, default: { get_input: NIFI_ENDPOINT } }
+              NIFI_API_ENDPOINT:        { type: string, default: { get_input: NIFI_API_ENDPOINT } }
+              NIFI_API_ACCESS_TOKEN:    { type: string, default: { get_input: NIFI_API_ACCESS_TOKEN } }
+              NIFI_API_VALIDATE_CERTS:  { type: boolean, default: { get_input: NIFI_API_VALIDATE_CERTS } }
+            implementation:
+              primary: playbooks/common/check.yaml
 
 relationship_types:
 

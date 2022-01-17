@@ -1,0 +1,55 @@
+---
+- hosts: all
+  vars:
+    monitor_delay_step: "{{ (monitor_period / 2) | round | int }}" # each step is half of overall delay
+    monitor_retries: "{{ (total_monitor_time /  monitor_period) | round | int }}"
+  tasks:
+    - name: Get stats for consumer
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/flow/process-groups/{{ consumer_pipeline_id }}/status"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: con_pg_flow
+      delay: "{{ monitor_delay_step }}"
+      retries: "{{ monitor_retries }}"
+      async: "{{ total_monitor_time | int }}"
+      poll: "{{ monitor_delay_step }}"
+      until: >
+        con_pg_flow.json.processGroupStatus.aggregateSnapshot.activeThreadCount == 0 and
+        con_pg_flow.json.processGroupStatus.aggregateSnapshot.flowFilesQueued == 0
+
+    - name: Wait the status monitoring to finish for consumer
+      async_status:
+        jid: "{{ con_pg_flow.ansible_job_id }}"
+      register: con_pg_flow_result
+      until: con_pg_flow_result.finished
+      retries: "{{ monitor_retries }}"
+
+    - name: Get stats for publisher
+      ansible.builtin.uri:
+        method: GET
+        url: "{{ NIFI_API_ENDPOINT }}/flow/process-groups/{{ publisher_pipeline_id }}/status"
+        validate_certs: "{{ NIFI_API_VALIDATE_CERTS }}"
+        follow_redirects: safe
+        return_content: yes
+        headers:
+          Authorization: "Bearer {{ NIFI_API_ACCESS_TOKEN }}"
+      register: pub_pg_flow
+      delay: "{{ monitor_delay_step }}"
+      retries: "{{ monitor_retries }}"
+      async: "{{ total_monitor_time | int }}"
+      poll: "{{ monitor_delay_step }}"
+      until: >
+        pub_pg_flow.json.processGroupStatus.aggregateSnapshot.activeThreadCount == 0 and
+        pub_pg_flow.json.processGroupStatus.aggregateSnapshot.flowFilesQueued == 0
+
+    - name: Wait the status monitoring to finish for publisher
+      async_status:
+        jid: "{{ pub_pg_flow.ansible_job_id }}"
+      register: pub_pg_flow_result
+      until: pub_pg_flow_result.finished
+      retries: "{{ monitor_retries }}"

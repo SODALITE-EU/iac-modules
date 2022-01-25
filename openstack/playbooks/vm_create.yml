@@ -42,6 +42,7 @@
       os_server_action:
         action: start
         server: "{{ vm_name }}"
+      environment: "{{ os_env if os_env is defined }}"
 
     - name: Set attributes
       set_stats:
@@ -87,37 +88,37 @@
         name: "node_exporter"
         shell: "/bin/bash"
         create_home: no
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-  
+
     - name: Download Node exporter
       become: yes
       get_url:
         url: "https://github.com/SODALITE-EU/node_exporter/releases/download/v1.2.0/node_exporter-1.2.0.linux-amd64.tar.gz"
         dest: /tmp
         checksum: "sha256:fc8a1e891a5fd4b52ecc006f440ab39d15ad9c581cc0a6ff6ded15884c4eaebf"
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-  
+
     - name: Extract Node exporter
       become: yes
       unarchive:
         src: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         dest: "/tmp"
         remote_src: true
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-    
+
     - name: Copy executable
       become: yes
-      copy: 
+      copy:
         src: "/tmp/node_exporter"
         dest: "/usr/local/bin"
         remote_src: true
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
 
@@ -128,28 +129,28 @@
         owner: "node_exporter"
         group: "node_exporter"
         mode: "0755"
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-        
+
     - name: Delete compressed download
       become: yes
       file:
         path: "/tmp/node_exporter-1.2.0.linux-amd64.tar.gz"
         state: absent
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-  
+
     - name: Delete node exporter in tmp
       become: yes
       file:
         path: "/tmp/node_exporter"
         state: absent
-      when: 
+      when:
         - not stat_result.stat.exists
         - include_exporter
-  
+
     - name: Create Node exporter Service File
       become: yes
       template:
@@ -159,13 +160,13 @@
         group: "node_exporter"
         mode: "0755"
       when: include_exporter
-  
+
     - name: systemd reload
       become: yes
       systemd:
         daemon_reload: yes
       when: include_exporter
-  
+
     - name: Start Node exporter service
       become: yes
       service:
@@ -175,7 +176,7 @@
       when: include_exporter
 
     - name: Register node-exporter in Consul server
-      uri: 
+      uri:
         url: http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
         method: PUT
         body:

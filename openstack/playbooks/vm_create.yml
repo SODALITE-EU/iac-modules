@@ -180,7 +180,7 @@
       when: include_exporter
 
     - name: Register node-exporter in Consul server
-      shell: curl --request PUT --data @/tmp/node_exporter.json http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
+      shell: curl --request PUT --data @/tmp/node_exporter.json {{ consul_server_address|quote }}:8500/v1/agent/service/register
       when:
         - consul_server_address != ""
         - include_exporter

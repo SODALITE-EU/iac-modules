@@ -177,7 +177,7 @@
 
     - name: Register node-exporter in Consul server
       uri:
-        url: http://{{ consul_server_address|quote }}:8500/v1/agent/service/register
+        url: "{{ consul_server_address|quote }}:8500/v1/agent/service/register"
         method: PUT
         body:
           Name: "consul-registered-node-exporters"

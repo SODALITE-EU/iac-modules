@@ -194,9 +194,11 @@
         "curl -Lo - https://github.com/skydive-project/skydive-binaries/raw/jenkins-builds/skydive-latest.gz | gzip -d > skydive && chmod +x skydive && sudo mv skydive /usr/local/bin/"
       args:
         chdir: "/tmp"
+      when: include_exporter
 
     - name: Run the skydive agent
       shell: SKYDIVE_ANALYZERS="{{skydive_analyzer}}" SKYDIVE_AGENT_TOPOLOGY_PROBES="lldp libvirt docker runc socketinfo" nohup sudo -E /usr/local/bin/skydive agent &
       when: skydive_analyzer != ""
       args:
         chdir: "/tmp"
+      when: include_exporter

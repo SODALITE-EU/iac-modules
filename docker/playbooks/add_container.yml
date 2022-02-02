@@ -22,6 +22,8 @@
       auto_remove: no
       command:
         "{{ command }}"
+      entrypoint:
+        "{{ entrypoint | default(omit) }}"
       volumes:
         "{{ volumes }}"
       env:
@@ -60,6 +62,8 @@
       auto_remove: no
       command:
         "{{ command }}"
+      entrypoint:
+        "{{ entrypoint | default(omit) }}"
       volumes:
         "{{ volumes }}"
       env:

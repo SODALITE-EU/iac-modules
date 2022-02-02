@@ -14,6 +14,11 @@ node_types:
         default: ""
         type: list
         required: False
+      entrypoint:
+        description: Entrypoint list for starting the container
+        default: null
+        type: list
+        required: False
       volumes:
         description: A list of mounted volumes for the docker container "host_path:container_path" like "/tmp/docker:/tmp"
         type: list
@@ -140,6 +145,7 @@ node_types:
               registry_url:         { type: string,  default: { get_property: [ SELF, registry, docker_registry_url ] } }
               volumes:              { type: list,    default: { get_property: [ SELF, volumes ] } }
               command:              { type: list,    default: { get_property: [ SELF, command ] } }
+              entrypoint:           { type: list,    default: { get_property: [ SELF, entrypoint ] } }
               docker_network_name:  { type: string,  default: { get_property: [ SELF, docker_network_name ] } }
               ca_cert:              { type: string,  default: { get_property: [ SELF, ca_cert ] } }
               client_cert:          { type: string,  default: { get_property: [ SELF, client_cert ] } }

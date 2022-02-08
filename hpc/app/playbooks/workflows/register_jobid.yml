@@ -4,7 +4,7 @@
   tasks:
   - name: Register JobID in the HPC Exporter's collector
     uri:
-      url: http://{{hpc_exporter_address}}/job
+      url: "{{hpc_exporter_address}}/job"
       method: post
       body: 
         job_id: "{{ job_id }}"

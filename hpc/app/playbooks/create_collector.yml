@@ -2,9 +2,9 @@
 - hosts: all
   gather_facts: yes
   tasks:
-  - name: Call HPC Exporter API to create a slurm collector
+  - name: Call HPC Exporter API to create a collector
     uri: 
-      url: http://{{hpc_exporter_address}}/collector
+      url: "{{hpc_exporter_address}}/collector"
       method: post
       body: 
         scheduler: "{{ (scheduler == 'torque') | ternary('pbs', scheduler) }}"

@@ -4,7 +4,7 @@
   tasks:
   - name: Call HPC Exporter API to delete a collector
     uri: 
-      url: http://{{hpc_exporter_address}}/collector
+      url: "{{hpc_exporter_address}}/collector"
       method: delete
       body: 
         host: "{{ ssh_host }}"

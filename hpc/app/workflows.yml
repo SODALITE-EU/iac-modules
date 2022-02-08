@@ -28,18 +28,22 @@ node_types:
         operations:  
           start:
             inputs:
-              ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
-              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
-              scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
-              exec_name: { type: string, default: { get_attribute: [SELF, execution, exec_name] } }
-              workspace: { type: string, default: { get_property: [SELF, execution, workspace] } }
-              env: { type: map, default: { get_attribute: [SELF, execution, env] } }
+              ansible_user:         { type: string, default: { get_property:  [SELF, host,      username      ] } }
+              scheduler:            { type: string, default: { get_property:  [SELF, host,      scheduler     ] } }
+              workspace:            { type: string, default: { get_property:  [SELF, execution, workspace     ] } }
+              exec_name:            { type: string, default: { get_attribute: [SELF, execution, exec_name     ] } }
+              ssh_host:             { type: string, default: { get_attribute: [SELF, host,      public_address] } }
+              env:                  { type: map,    default: { get_attribute: [SELF, execution, env           ] } }
+              monitoring_id:        { type: string, default: { get_input:      monitoring_id                    } }
+              hpc_exporter_address: { type: string, default: { get_input:      hpc_exporter_address             } }
+            # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
             implementation: 
               primary: playbooks/workflows/start.yml
               dependencies: 
                 - playbooks/workflows/batch/start_batch.yml
                 - playbooks/workflows/slurm/start_slurm.yml
                 - playbooks/workflows/torque/start_torque.yml
+                - playbooks/workflows/register_jobid.yml
 
   sodalite.nodes.workflow.Result: 
     derived_from: tosca.nodes.SoftwareComponent
@@ -65,13 +69,13 @@ node_types:
         operations:  
           start:
             inputs:
-              ansible_user: { type: string, default: { get_property: [SELF, host, username] } }
-              # ansible_ssh_private_key_file: { type: string, default: { get_property: [SELF, host, ssh-key] } }
-              scheduler: { type: string, default: { get_property: [SELF, host, scheduler] } }
-              job_monitor_period: { type: integer, default: { get_property: [SELF, monitor_period] } }
-              job_monitor_retries_headroom: { type: integer, default: { get_property: [SELF, monitor_retries_headroom] } }
-              job_id: { type: string, default: { get_attribute: [SELF, job, job_id] } }
-              job_walltime: { type: string, default: { get_attribute: [SELF, job, job_walltime] } }
+              ansible_user:                 { type: string,  default: { get_property:  [SELF, host, username          ] } }
+              scheduler:                    { type: string,  default: { get_property:  [SELF, host, scheduler         ] } }
+              job_monitor_period:           { type: integer, default: { get_property:  [SELF, monitor_period          ] } }
+              job_monitor_retries_headroom: { type: integer, default: { get_property:  [SELF, monitor_retries_headroom] } }
+              job_id:                       { type: string,  default: { get_attribute: [SELF, job, job_id             ] } }
+              job_walltime:                 { type: string,  default: { get_attribute: [SELF, job, job_walltime       ] } }
+            # ansible_ssh_private_key_file: { type: string,  default: { get_property:  [SELF, host, ssh-key           ] } }
             implementation: 
               primary: playbooks/workflows/check.yml
               dependencies: 

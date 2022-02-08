@@ -10,3 +10,7 @@
 - name: Start job in any compute
   import_playbook: start_batch.yml
   when: scheduler == "batch"
+
+- name: Register the job_id in HPC Exporter
+  import_playbook: register_jobid.yml
+  when: scheduler != "batch"

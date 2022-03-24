@@ -77,6 +77,15 @@
       wait_for_connection:
       environment: "{{ os_env if os_env is defined }}"
 
+    - name: Add user SSH key to authorized
+      authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        key: "{{ additional_public_key }}"
+      when:
+        - additional_public_key != None
+        - additional_public_key != ""
+
     - name: Check that the node_exporter.service exists
       stat:
         path: /etc/systemd/system/node_exporter.service

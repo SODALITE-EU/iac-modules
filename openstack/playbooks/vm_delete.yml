@@ -13,7 +13,7 @@
 
     - name: Deregister node-exporter in Consul server
       uri:
-        url: {{ consul_server_address|quote }}/v1/agent/service/deregister/{{ monitoring_id }}-{{ id }}
+        url: "{{ consul_server_address|quote }}/v1/agent/service/deregister/{{ monitoring_id }}-{{ id }}"
         method: PUT
       when: 
         - consul_server_address != ""

@@ -89,6 +89,11 @@ node_types:
         type: string
         required: false
         default: "no_deployment_label"
+      additional_public_key:
+        description: Additional public key that is added to VM authorized_keys. No new OpenStack keypair is created.
+        type: string
+        required: false
+        default: ""
     attributes:  
       id:  
         description: OpenStack id of the VM 
@@ -131,6 +136,7 @@ node_types:
               skydive_analyzer:         { type: string,  default: { get_property:  [ SELF, skydive_analyzer      ] } }
               deployment_label:         { type: string,  default: { get_property:  [ SELF, deployment_label      ] } }
               monitoring_id:            { type: string,  default: { get_property:  [ SELF, monitoring_id         ] } }
+              additional_public_key:    { type: string,  default: { get_property:  [ SELF, additional_public_key ] } }
               instance_name:            { type: string,  default: { get_attribute: [ SELF, tosca_name            ] } }
             implementation: 
               primary: playbooks/vm_create.yml 
